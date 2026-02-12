@@ -11,4 +11,6 @@ import { LayoutComponent } from './core/layout/layout.component';
 })
 export class AppComponent {
     title = 'AgriTech Digital Twin';
+
+    constructor() {}
 }

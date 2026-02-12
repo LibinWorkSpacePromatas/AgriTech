@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdelaideTimePipe } from '../../shared/pipes/adelaide-time.pipe';
 import { BlockHeroComponent } from '../../shared/components/block-hero.component';
@@ -6,6 +6,8 @@ import { SensorCardComponent } from '../../shared/components/sensor-card.compone
 import { LucideAngularModule, Cpu, Sprout } from 'lucide-angular';
 import { MOCK_BLOCKS } from '../../shared/constants';
 import { Block, SensorReading, HistoricalReading } from '../../shared/models';
+import { BlockService } from '../../shared/services/block.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -155,10 +157,11 @@ import { Block, SensorReading, HistoricalReading } from '../../shared/models';
     }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   currentBlock: Block = MOCK_BLOCKS[0];
   CpuIcon = Cpu;
   SproutIcon = Sprout;
+  private destroy$ = new Subject<void>();
 
   lastReadings: HistoricalReading[] = [
     { period: 'Now', value: '47.4%' },
@@ -199,30 +202,38 @@ export class DashboardComponent implements OnInit {
     {
       type: 'humidity',
       label: 'Humidity',
-      value: 47.0,
+      value: 62.1,
       unit: '%',
       status: 'normal',
       timestamp: new Date(),
-      hasHistory: true
+      hasHistory: false
     },
     {
       type: 'ph-level',
-      label: 'pH Level',
-      value: 7.9,
-      unit: '',
+      label: 'Soil pH',
+      value: 6.8,
+      unit: 'pH',
       status: 'normal',
       timestamp: new Date(),
       hasHistory: false
     }
   ];
 
+  constructor(private blockService: BlockService) {}
+
   ngOnInit(): void {
-    // Update sensor readings periodically
-    setInterval(() => {
-      this.sensorReadings = this.sensorReadings.map(reading => ({
-        ...reading,
-        timestamp: new Date()
-      }));
-    }, 60000);
+    this.blockService.selectedBlock$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(block => {
+        if (block) {
+          this.currentBlock = block;
+          // In a real app, we would fetch new sensor readings for the block here
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

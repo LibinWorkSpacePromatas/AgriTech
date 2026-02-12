@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { NAVIGATION_ITEMS, MOCK_BLOCKS, MOCK_USER } from '../../shared/constants';
 import { BlockSelectorComponent } from '../../shared/components/block-selector.component';
 import { Block } from '../../shared/models';
+import { BlockService } from '../../shared/services/block.service';
 import { LucideAngularModule, Leaf, LayoutDashboard, Droplet, TrendingUp, Sprout, MessageCircle, LogOut, X } from 'lucide-angular';
 
 @Component({
@@ -251,8 +252,14 @@ export class SidebarComponent {
 
   navigationItems = NAVIGATION_ITEMS;
   blocks = MOCK_BLOCKS;
-  selectedBlock: Block = MOCK_BLOCKS[0];
+  selectedBlock: Block | null = null;
   userProfile = MOCK_USER;
+
+  constructor(private blockService: BlockService) {
+    this.blockService.selectedBlock$.subscribe(block => {
+      this.selectedBlock = block;
+    });
+  }
 
   // Icon references
   LeafIcon = Leaf;
@@ -273,6 +280,6 @@ export class SidebarComponent {
   }
 
   onBlockSelected(block: Block): void {
-    this.selectedBlock = block;
+    this.blockService.setSelectedBlock(block);
   }
 }

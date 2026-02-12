@@ -79,41 +79,53 @@ export const MOCK_BLOCKS = [
         id: 'block-a-shiraz',
         name: 'Block A - Shiraz',
         location: 'Renmark, SA',
-        coordinates: '34.1800°S, 140.7400°E',
+        coordinates: '34.5300°S, 138.9600°E',
         size: 8,
         sizeUnit: 'hectares',
         grapeVariety: 'Shiraz',
-        soilType: 'Mallee Sand'
+        soilType: 'Mallee Sand',
+        lat: -34.53,
+        lon: 138.96,
+        lan: "BCPKFB"
     },
     {
         id: 'block-b-cabernet',
         name: 'Block B - Cabernet',
         location: 'Renmark, SA',
-        coordinates: '34.1820°S, 140.7420°E',
+        coordinates: '34.5400°S, 138.9700°E',
         size: 12,
         sizeUnit: 'hectares',
         grapeVariety: 'Cabernet Sauvignon',
-        soilType: 'Red Brown Earth'
+        soilType: 'Red Brown Earth',
+        lat: -34.54,
+        lon: 138.97,
+        lan: "WOGJLp"
     },
     {
         id: 'block-c-chardonnay',
         name: 'Block C - Chardonnay',
         location: 'Renmark, SA',
-        coordinates: '34.1790°S, 140.7380°E',
+        coordinates: '34.5350°S, 138.9650°E',
         size: 6,
         sizeUnit: 'hectares',
         grapeVariety: 'Chardonnay',
-        soilType: 'Loamy Sand'
+        soilType: 'Loamy Sand',
+        lat: -34.535,
+        lon: 138.965,
+        lan: "EUVJLU"
     },
     {
         id: 'block-d-merlot',
         name: 'Block D - Merlot',
         location: 'Renmark, SA',
-        coordinates: '34.1810°S, 140.7410°E',
+        coordinates: '34.5380°S, 138.9680°E',
         size: 10,
         sizeUnit: 'hectares',
         grapeVariety: 'Merlot',
-        soilType: 'Calcareous Loam'
+        soilType: 'Calcareous Loam',
+        lat: -34.538,
+        lon: 138.968,
+        lan: "BCPKKE"
     }
 ];
 

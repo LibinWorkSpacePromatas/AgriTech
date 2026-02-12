@@ -1,9 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { NAVIGATION_ITEMS, MOCK_BLOCKS } from '../../shared/constants';
+import { NAVIGATION_ITEMS, MOCK_BLOCKS, MOCK_USER } from '../../shared/constants';
 import { BlockSelectorComponent } from '../../shared/components/block-selector.component';
 import { Block } from '../../shared/models';
+import { BlockService } from '../../shared/services/block.service';
 import { LucideAngularModule, Leaf, LayoutDashboard, Droplet, TrendingUp, Sprout, MessageCircle, LogOut, X } from 'lucide-angular';
 import { AuthService } from '../services/auth.service';
 
@@ -205,7 +206,18 @@ export class SidebarComponent {
 
   navigationItems = NAVIGATION_ITEMS;
   blocks = MOCK_BLOCKS;
-  selectedBlock: Block = MOCK_BLOCKS[0];
+  selectedBlock: Block | null = null;
+  userProfile = MOCK_USER;
+
+  constructor(
+    private blockService: BlockService,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.blockService.selectedBlock$.subscribe(block => {
+      this.selectedBlock = block;
+    });
+  }
 
   // Icon references
   LeafIcon = Leaf;
@@ -221,17 +233,12 @@ export class SidebarComponent {
     'message-circle': MessageCircle
   };
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
-
   getIcon(iconName: string): any {
     return this.iconMap[iconName] || LayoutDashboard;
   }
 
   onBlockSelected(block: Block): void {
-    this.selectedBlock = block;
+    this.blockService.setSelectedBlock(block);
   }
 
   signOut(): void {

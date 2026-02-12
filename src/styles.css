@@ -8,6 +8,8 @@
   box-sizing: border-box;
 }
 
+@import 'leaflet/dist/leaflet.css';
+
 :root {
   /* Promasecure Design - Agricultural Color Theme */
   --primary-green: #034744;

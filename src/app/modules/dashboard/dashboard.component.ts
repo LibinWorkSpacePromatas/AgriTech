@@ -3,10 +3,13 @@ import { CommonModule } from '@angular/common';
 import { WeatherService, WeatherData } from '../../core/services/weather.service';
 import { LineChartComponent, ChartSeries } from '../../shared/components/line-chart.component';
 import { ModalComponent } from '../../shared/components/modal.component';
-import { LucideAngularModule, Droplets, Thermometer, Wind, Sprout, CloudRain, ExternalLink, RefreshCw, CheckCircle, AlertTriangle, Zap } from 'lucide-angular';
-import { Subscription, interval } from 'rxjs';
+import { LucideAngularModule, Droplets, Thermometer, Wind, Sprout, CloudRain, ExternalLink, RefreshCw, CheckCircle, AlertTriangle, Zap, Cpu } from 'lucide-angular';
+import { Subscription, interval, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { User as AppUser } from '../../core/models/user.model';
+import { BlockService } from '../../shared/services/block.service';
+import { MOCK_BLOCKS } from '../../shared/constants';
+import { Block as SharedBlock } from '../../shared/models';
 
 interface Sensor {
   id: string;
@@ -19,12 +22,9 @@ interface Sensor {
   historyLabels: string[];
 }
 
-interface Block {
-  id: string;
-  name: string;
+interface Block extends Omit<SharedBlock, 'location'> {
   crop: string;
   area: number;
-  soilType: string;
   location: {
     name: string;
     lat: number;
@@ -91,6 +91,7 @@ const CROP_PROFILES: Record<string, any> = {
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  CpuIcon = Cpu;
   DropletsIcon = Droplets;
   ThermometerIcon = Thermometer;
   WindIcon = Wind;
@@ -101,6 +102,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   CheckCircleIcon = CheckCircle;
   AlertTriangleIcon = AlertTriangle;
   ZapIcon = Zap;
+
+  private destroy$ = new Subject<void>();
 
   activeTab: 'overview' | 'advisor' = 'overview'; // Default tab
 
@@ -238,10 +241,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     public weatherService: WeatherService,
-    private authService: AuthService
+    private authService: AuthService,
+    private blockService: BlockService
   ) { }
 
   ngOnInit(): void {
+    // Sync with global block service
+    this.blockService.selectedBlock$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(sharedBlock => {
+        if (sharedBlock) {
+          // Map shared block to local dashboard block structure
+          this.currentBlock = {
+            ...sharedBlock,
+            crop: sharedBlock.grapeVariety, // Map variety to crop
+            area: sharedBlock.size, // Map size to area
+            soilType: sharedBlock.soilType,
+            location: {
+              name: sharedBlock.location,
+              lat: sharedBlock.lat,
+              lon: sharedBlock.lon
+            }
+          } as Block;
+          
+          this.updateAdvisorData();
+        }
+      });
+
     // Subscribe to active user changes
     this.authSubscription = this.authService.getActiveUser().subscribe(appUser => {
       if (appUser) {
@@ -268,6 +294,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.sensorInterval) this.sensorInterval.unsubscribe();
+    if (this.weatherInterval) this.weatherInterval.unsubscribe();
+    if (this.countdownInterval) this.countdownInterval.unsubscribe();
+    if (this.authSubscription) this.authSubscription.unsubscribe();
+  }
+
   loadUserData(appUser: AppUser): void {
     // Map AppUser to dashboard User format
     this.currentUser = {
@@ -278,14 +313,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
           id: 'b1',
           name: appUser.farmName,
           crop: appUser.primaryCropName,
-          area: 10.0, // Default area, can be made dynamic later
+          area: 10.0,
           soilType: appUser.primarySoilType,
           location: {
             name: appUser.farmLocation,
             lat: this.getLatLongForLocation(appUser.farmLocation).lat,
             lon: this.getLatLongForLocation(appUser.farmLocation).lon
-          }
-        }
+          },
+          coordinates: '',
+          size: 10.0,
+          sizeUnit: 'hectares',
+          grapeVariety: appUser.primaryCropName,
+          lan: 'BCPKFB'
+        } as Block
       ]
     };
     this.currentBlock = this.currentUser.blocks[0];
@@ -301,13 +341,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       'Nuriootpa, SA': { lat: -34.4667, lon: 138.9833 }       // Barossa Valley
     };
     return locationMap[location] || { lat: -34.1747, lon: 140.7472 }; // Default to Renmark
-  }
-
-  ngOnDestroy(): void {
-    if (this.sensorInterval) this.sensorInterval.unsubscribe();
-    if (this.weatherInterval) this.weatherInterval.unsubscribe();
-    if (this.countdownInterval) this.countdownInterval.unsubscribe();
-    if (this.authSubscription) this.authSubscription.unsubscribe();
   }
 
   simulateSensorReadings() {

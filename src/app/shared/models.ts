@@ -9,6 +9,9 @@ export interface Block {
     sizeUnit: string;
     grapeVariety: string;
     soilType: string;
+    lat: number;
+    lon: number;
+    lan: string;
 }
 
 export interface SensorReading {

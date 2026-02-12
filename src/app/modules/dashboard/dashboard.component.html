@@ -18,11 +18,14 @@
     <!-- BLOCK INFO CARD -->
     <div class="block-info-card">
         <div class="block-details">
-            <h2>{{ currentBlock?.name }} - {{ currentBlock?.crop }}</h2>
+            <h2>
+                <i-lucide [img]="GrapeIcon" size="22" style="margin-right: 8px; vertical-align: bottom;"></i-lucide>
+                {{ currentBlock?.name }} - {{ currentBlock?.crop }}
+            </h2>
             <div class="meta-row">
-                <span><i-lucide [img]="SproutIcon" size="14"></i-lucide> {{ currentBlock?.area }} hectares</span>
-                <span>{{ currentBlock?.crop }}</span>
-                <span>{{ currentBlock?.soilType }}</span>
+                <span><i-lucide [img]="SproutIcon" size="14"></i-lucide> {{ currentBlock?.area }} ha</span>
+                <span><i-lucide [img]="LayersIcon" size="14"></i-lucide> {{ currentBlock?.soilDescription ||
+                    currentBlock?.soilType }}</span>
             </div>
         </div>
         <div class="location-info">

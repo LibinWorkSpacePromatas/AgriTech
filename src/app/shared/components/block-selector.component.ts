@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Block } from '../models';
 
 @Component({
-    selector: 'app-block-selector',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-block-selector',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="block-selector" (click)="toggleDropdown()">
       <div class="selector-header">
         <span class="selector-label">ACTIVE BLOCK</span>
@@ -23,13 +23,12 @@ import { Block } from '../models';
           [class.active]="block.id === selectedBlock?.id"
           (click)="selectBlock(block); $event.stopPropagation()"
         >
-          <span class="block-icon">📍</span>
           <span>{{ block.name }}</span>
         </div>
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .block-selector {
       position: relative;
       padding: 0.75rem 1rem;
@@ -90,7 +89,6 @@ import { Block } from '../models';
     .dropdown-item {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
       padding: 0.75rem 1rem;
       color: var(--gray-700);
       transition: background-color var(--transition-fast);
@@ -105,26 +103,22 @@ import { Block } from '../models';
       background-color: var(--primary-green);
       color: var(--white);
     }
-    
-    .block-icon {
-      font-size: 1rem;
-    }
   `]
 })
 export class BlockSelectorComponent {
-    @Input() blocks: Block[] = [];
-    @Input() selectedBlock: Block | null = null;
-    @Output() blockSelected = new EventEmitter<Block>();
+  @Input() blocks: Block[] = [];
+  @Input() selectedBlock: Block | null = null;
+  @Output() blockSelected = new EventEmitter<Block>();
 
-    isOpen = false;
+  isOpen = false;
 
-    toggleDropdown(): void {
-        this.isOpen = !this.isOpen;
-    }
+  toggleDropdown(): void {
+    this.isOpen = !this.isOpen;
+  }
 
-    selectBlock(block: Block): void {
-        this.selectedBlock = block;
-        this.blockSelected.emit(block);
-        this.isOpen = false;
-    }
+  selectBlock(block: Block): void {
+    this.selectedBlock = block;
+    this.blockSelected.emit(block);
+    this.isOpen = false;
+  }
 }

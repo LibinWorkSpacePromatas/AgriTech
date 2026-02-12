@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Droplet, Waves, Calendar, Activity, AlertCircle, MapPin, Search, Layers } from 'lucide-angular';
 import { WaterIrrigationService, IrrigationStatus } from '../../services/water-irrigation/water-irrigation.service';
 import { BlockService } from '../../shared/services/block.service';
-import { MOCK_BLOCKS } from '../../shared/constants';
+import { AuthService } from '../../core/services/auth.service';
+import { Block } from '../../shared/models';
 import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import * as L from 'leaflet';
@@ -29,14 +30,14 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
   irrigationStatus: IrrigationStatus | null = null;
   isLoading = true;
   error: string | null = null;
-  blocks = MOCK_BLOCKS;
-  
-  // Coordinates for search
-  latitude: number = -34.53;
-  longitude: number = 138.96;
-  currentLan: string = "BCPKFB";
+  blocks: Block[] = [];
+
+  // Coordinates for search - will be initialized from BlockService
+  latitude: number = 0;
+  longitude: number = 0;
+  currentLan: string = "";
   selectedBlockName: string = "";
-  
+
   // Map properties
   private map!: L.Map;
   private marker!: L.Marker;
@@ -55,9 +56,49 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
   constructor(
     private waterIrrigationService: WaterIrrigationService,
     private blockService: BlockService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+
+    // Subscribe to active user and map their blocks
+    this.authService.activeUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
+      if (user) {
+        // Map user blocks to Block interface with unique coordinates
+        this.blocks = user.blocks.map((block, index) => {
+          const alphabet = String.fromCharCode(65 + index);
+          return {
+            id: block.lanslu,
+            name: `Block ${alphabet} - ${block.crop || user.primaryCropName}`,
+            location: user.farmLocation,
+            coordinates: '',
+            size: block.area,
+            sizeUnit: 'ha',
+            grapeVariety: block.crop || user.primaryCropName,
+            crop: block.crop || user.primaryCropName,
+            soilType: block.primarySoilClass,
+            soilDescription: block.description,
+            // Generate unique coordinates for each block
+            lat: -34.5 - (index * 0.01),
+            lon: 138.9 + (index * 0.01),
+            lan: block.lanslu
+          } as Block;
+        });
+
+        console.log('WaterIrrigationComponent: Loaded blocks for user:', user.userName, this.blocks);
+      }
+    });
+
+    // Initialize from the currently selected block
+    const initialBlock = this.blockService.getSelectedBlock();
+    if (initialBlock) {
+      this.latitude = initialBlock.lat;
+      this.longitude = initialBlock.lon;
+      this.currentLan = initialBlock.lan;
+      this.selectedBlockName = initialBlock.name;
+      console.log('WaterIrrigationComponent: Initialized with block:', initialBlock.name);
+    }
   }
 
   ngOnInit(): void {
@@ -66,17 +107,43 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
       .pipe(takeUntil(this.destroy$))
       .subscribe(block => {
         if (block) {
-          console.log('WaterIrrigationComponent: Global block changed to:', block.name);
+          console.log('=== WaterIrrigationComponent: Block Change Event ===');
+          console.log('Block received:', block);
+          console.log('Block name:', block.name);
+          console.log('Block lat:', block.lat);
+          console.log('Block lon:', block.lon);
+          console.log('Block lan:', block.lan);
+          console.log('Current blocks array:', this.blocks);
+
           this.latitude = block.lat;
           this.longitude = block.lon;
           this.currentLan = block.lan;
           this.selectedBlockName = block.name;
-          
+
+          console.log('Updated component values:');
+          console.log('  latitude:', this.latitude);
+          console.log('  longitude:', this.longitude);
+          console.log('  selectedBlockName:', this.selectedBlockName);
+
+          // Trigger change detection to update the UI (lat/lon inputs and dropdown)
+          this.cdr.detectChanges();
+          console.log('Change detection triggered');
+
+          // Update map immediately if it exists
+          if (this.map && this.marker) {
+            console.log('Updating map to coordinates:', this.latitude, this.longitude);
+            this.map.setView([this.latitude, this.longitude], 16);
+            this.marker.setLatLng([this.latitude, this.longitude]);
+            this.map.invalidateSize();
+          } else {
+            console.log('Map not yet initialized');
+          }
+
           // Refresh data and update map focus
           this.refreshData(true);
         }
       });
-    
+
     // Auto-refresh every 15 minutes for current location
     interval(15 * 60 * 1000)
       .pipe(
@@ -92,13 +159,16 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
           console.error('Auto-refresh failed:', error);
         }
       });
+
+    // Load initial data for the selected block
+    this.refreshData(true);
   }
 
   private isInsideAustralia(lat: number, lng: number): boolean {
-    return lat >= this.AUS_BOUNDS.latMin && 
-           lat <= this.AUS_BOUNDS.latMax && 
-           lng >= this.AUS_BOUNDS.lngMin && 
-           lng <= this.AUS_BOUNDS.lngMax;
+    return lat >= this.AUS_BOUNDS.latMin &&
+      lat <= this.AUS_BOUNDS.latMax &&
+      lng >= this.AUS_BOUNDS.lngMin &&
+      lng <= this.AUS_BOUNDS.lngMax;
   }
 
   private initMap(): void {
@@ -203,7 +273,7 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
         this.irrigationStatus = status;
         this.isLoading = false;
         this.error = null;
-        
+
         // Handle map updates
         if (this.isBrowser) {
           // No timeout needed if map container is always in DOM

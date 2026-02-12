@@ -83,9 +83,10 @@ export const MOCK_BLOCKS = [
         size: 8,
         sizeUnit: 'hectares',
         grapeVariety: 'Shiraz',
+        crop: 'Shiraz',
         soilType: 'Mallee Sand',
-        lat: -34.53,
-        lon: 138.96,
+        lat: -34,
+        lon: 138,
         lan: "BCPKFB"
     },
     {
@@ -96,9 +97,10 @@ export const MOCK_BLOCKS = [
         size: 12,
         sizeUnit: 'hectares',
         grapeVariety: 'Cabernet Sauvignon',
+        crop: 'Cabernet Sauvignon',
         soilType: 'Red Brown Earth',
-        lat: -34.54,
-        lon: 138.97,
+        lat: -34,
+        lon: 138,
         lan: "WOGJLp"
     },
     {
@@ -109,9 +111,10 @@ export const MOCK_BLOCKS = [
         size: 6,
         sizeUnit: 'hectares',
         grapeVariety: 'Chardonnay',
+        crop: 'Chardonnay',
         soilType: 'Loamy Sand',
-        lat: -34.535,
-        lon: 138.965,
+        lat: -34,
+        lon: 138,
         lan: "EUVJLU"
     },
     {
@@ -122,9 +125,10 @@ export const MOCK_BLOCKS = [
         size: 10,
         sizeUnit: 'hectares',
         grapeVariety: 'Merlot',
+        crop: 'Merlot',
         soilType: 'Calcareous Loam',
-        lat: -34.538,
-        lon: 138.968,
+        lat: -34,
+        lon: 138,
         lan: "BCPKKE"
     }
 ];

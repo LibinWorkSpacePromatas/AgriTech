@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { WeatherService, WeatherData } from '../../core/services/weather.service';
 import { LineChartComponent, ChartSeries } from '../../shared/components/line-chart.component';
 import { ModalComponent } from '../../shared/components/modal.component';
-import { LucideAngularModule, Droplets, Thermometer, Wind, Sprout, CloudRain, ExternalLink, RefreshCw, CheckCircle, AlertTriangle, Zap, Cpu } from 'lucide-angular';
+import { LucideAngularModule, Droplets, Thermometer, Wind, Sprout, CloudRain, ExternalLink, RefreshCw, CheckCircle, AlertTriangle, Zap, Cpu, Layers, Grape } from 'lucide-angular';
 import { Subscription, interval, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { User as AppUser } from '../../core/models/user.model';
@@ -25,6 +25,7 @@ interface Sensor {
 interface Block extends Omit<SharedBlock, 'location'> {
   crop: string;
   area: number;
+  soilDescription?: string;
   location: {
     name: string;
     lat: number;
@@ -102,6 +103,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   CheckCircleIcon = CheckCircle;
   AlertTriangleIcon = AlertTriangle;
   ZapIcon = Zap;
+  LayersIcon = Layers;
+  GrapeIcon = Grape;
 
   private destroy$ = new Subject<void>();
 
@@ -263,7 +266,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
               lon: sharedBlock.lon
             }
           } as Block;
-          
+
           this.updateAdvisorData();
         }
       });
@@ -308,27 +311,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.currentUser = {
       id: appUser.userId,
       name: appUser.userName,
-      blocks: [
-        {
-          id: 'b1',
-          name: appUser.farmName,
-          crop: appUser.primaryCropName,
-          area: 10.0,
+      blocks: appUser.blocks.map((block, index) => {
+        const alphabet = String.fromCharCode(65 + index);
+        const cropName = block.crop || appUser.primaryCropName;
+
+        return {
+          id: block.lanslu,
+          name: `BLOCK - ${alphabet} ${cropName}`,
+          crop: cropName,
+          area: block.area,
           soilType: appUser.primarySoilType,
+          soilDescription: block.description,
           location: {
             name: appUser.farmLocation,
             lat: this.getLatLongForLocation(appUser.farmLocation).lat,
             lon: this.getLatLongForLocation(appUser.farmLocation).lon
           },
           coordinates: '',
-          size: 10.0,
+          size: block.area,
           sizeUnit: 'hectares',
-          grapeVariety: appUser.primaryCropName,
-          lan: 'BCPKFB'
-        } as Block
-      ]
+          grapeVariety: cropName,
+          lan: block.lanslu
+        } as Block;
+      })
     };
-    this.currentBlock = this.currentUser.blocks[0];
+
+    // Only set default if no block selected via service
+    if (!this.currentBlock && this.currentUser.blocks.length > 0) {
+      this.currentBlock = this.currentUser.blocks[0];
+    }
   }
 
   getLatLongForLocation(location: string): { lat: number; lon: number } {

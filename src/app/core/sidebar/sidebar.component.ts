@@ -207,13 +207,46 @@ export class SidebarComponent {
   navigationItems = NAVIGATION_ITEMS;
   blocks = MOCK_BLOCKS;
   selectedBlock: Block | null = null;
-  userProfile = MOCK_USER;
+  userProfile: any = MOCK_USER;
 
   constructor(
     private blockService: BlockService,
     private authService: AuthService,
     private router: Router
   ) {
+    this.authService.activeUser$.subscribe(user => {
+      if (user) {
+        this.userProfile = user;
+        // Map user user blocks to sidebar blocks with custom naming
+        this.blocks = user.blocks.map((block, index) => {
+          // Create alphabet label (A, B, C...)
+          const alphabet = String.fromCharCode(65 + index);
+
+          return {
+            id: block.lanslu,
+            name: `BLOCK - ${alphabet} ${block.crop || user.primaryCropName}`,
+            location: user.farmLocation,
+            coordinates: '', // Placeholder
+            size: block.area,
+            sizeUnit: 'ha',
+            grapeVariety: block.crop || user.primaryCropName,
+            crop: block.crop || user.primaryCropName,
+            soilType: block.primarySoilClass,
+            soilDescription: block.description,
+            // Generate unique coordinates for each block (same logic as water-irrigation)
+            lat: -34.5 - (index * 0.01),
+            lon: 138.9 + (index * 0.01),
+            lan: block.lanslu
+          } as Block;
+        });
+
+        // Auto-select first block if available
+        if (this.blocks.length > 0 && !this.selectedBlock) {
+          this.blockService.setSelectedBlock(this.blocks[0]);
+        }
+      }
+    });
+
     this.blockService.selectedBlock$.subscribe(block => {
       this.selectedBlock = block;
     });

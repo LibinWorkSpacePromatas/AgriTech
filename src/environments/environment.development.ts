@@ -10,6 +10,12 @@ export const environment = {
     defaultLongitude: 138.96,
     criticalMoistureThreshold: 0.20,
     optimalMoistureThreshold: 0.40,
-    maxRetries: 3
+    maxRetries: 3,
+    australiaBounds: {
+      minLat: -44,
+      maxLat: -10,
+      minLon: 112,
+      maxLon: 154
+    }
   }
 };

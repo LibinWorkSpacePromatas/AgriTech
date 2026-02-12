@@ -8,7 +8,9 @@ export interface Block {
     size: number; // in hectares
     sizeUnit: string;
     grapeVariety: string;
+    crop: string;
     soilType: string;
+    soilDescription?: string;
     lat: number;
     lon: number;
     lan: string;

@@ -1,0 +1,483 @@
+<div class="dashboard-container fade-in">
+
+    <!-- HEADER SECTION -->
+    <!-- HEADER SECTION REMOVED (Duplicate) -->
+    <!-- 
+    <div class="header-section">
+        <div>
+            <h1 class="welcome-text">Welcome back, Maria!</h1>
+            <p class="subtitle">Here's your block conditions for today.</p>
+        </div>
+        <button class="btn btn-outline">
+            <i-lucide [img]="ExternalLinkIcon" size="16"></i-lucide>
+            Open Grower GPT
+        </button>
+    </div> 
+    -->
+
+    <!-- BLOCK INFO CARD -->
+    <div class="block-info-card">
+        <div class="block-details">
+            <h2>{{ currentBlock.name }} - {{ currentBlock.crop }}</h2>
+            <div class="meta-row">
+                <span><i-lucide [img]="SproutIcon" size="14"></i-lucide> {{ currentBlock.area }} hectares</span>
+                <span>{{ currentBlock.crop }}</span>
+                <span>{{ currentBlock.soilType }}</span>
+            </div>
+        </div>
+        <div class="location-info">
+            <div class="location-name">{{ currentBlock.location.name }}</div>
+            <div class="coords">{{ currentBlock.location.lat }}°S, {{ currentBlock.location.lon }}°E</div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-nav">
+        <button class="tab-btn" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')"><i-lucide
+                [img]="SproutIcon" size="16"
+                style="margin-right: 6px; display: inline-block; vertical-align: text-bottom;"></i-lucide>Overview</button>
+        <button class="tab-btn" [class.active]="activeTab === 'advisor'" (click)="setActiveTab('advisor')"><i-lucide
+                [img]="SproutIcon" size="16"
+                style="margin-right: 6px; display: inline-block; vertical-align: text-bottom;"></i-lucide>Crop
+            Advisor</button>
+    </div>
+
+    <!-- OVERVIEW TAB CONTENT -->
+    <div *ngIf="activeTab === 'overview'" class="fade-in">
+        <!-- SENSORS SECTION -->
+        <div class="section-label">
+            <i-lucide [img]="SproutIcon" size="16"></i-lucide>
+            IoT Sensor Readings <span class="click-hint">(Click for history)</span>
+        </div>
+
+        <div class="sensors-grid">
+            <div *ngFor="let sensor of sensors" class="sensor-card hover-lift" (click)="openSensorHistory(sensor)">
+                <div class="sensor-header">
+                    <div class="sensor-icon-wrapper">
+                        <i-lucide [img]="sensor.icon" size="18"></i-lucide>
+                    </div>
+                    <span class="status-dot"
+                        [ngClass]="{'normal': sensor.status === 'Normal', 'warning': sensor.status !== 'Normal'}"></span>
+                    <span class="status-text">{{ sensor.status }}</span>
+                </div>
+                <div class="sensor-label">{{ sensor.label }}</div>
+                <div class="sensor-value">
+                    {{ sensor.value }}<span class="unit">{{ sensor.unit }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NUTRIENT SECTION -->
+        <div class="nutrient-section">
+            <div class="nutrient-badge-row">
+                <i-lucide [img]="SproutIcon" size="16"></i-lucide>
+                <span class="label">Nutrient Index:</span>
+                <span class="badge badge-high">Low</span>
+            </div>
+        </div>
+
+        <!-- LIVE WEATHER SECTION -->
+        <div class="weather-card">
+            <div class="weather-header">
+                <div class="live-indicator">
+                    <span class="pulse-dot"></span>
+                    <h3>Live Weather <span class="location">— Berri</span></h3>
+                    <span class="weather-desc" *ngIf="weatherData">{{
+                        weatherService.getWeatherDescription(weatherData.current.weatherCode) }}</span>
+                </div>
+                <button class="btn btn-sm btn-light" (click)="refreshWeather()" [disabled]="isLoading">
+                    <i-lucide [img]="RefreshCwIcon" size="14" [class.spin]="isLoading"></i-lucide>
+                    {{ isLoading ? 'Refreshing...' : 'Refresh' }}
+                </button>
+            </div>
+
+            <div class="weather-stats-grid" *ngIf="weatherData">
+                <div class="stat-item">
+                    <div class="stat-icon temperature">
+                        <i-lucide [img]="ThermometerIcon" size="20"></i-lucide>
+                    </div>
+                    <div class="stat-value">{{ weatherData.current.temperature }}°C</div>
+                    <div class="stat-label">Temperature</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-icon normal">
+                        <i-lucide [img]="ThermometerIcon" size="20"></i-lucide>
+                    </div>
+                    <div class="stat-value">{{ weatherData.current.temperature - 0.9 | number:'1.1-1' }}°C</div>
+                    <!-- Mock "Feels Like" -->
+                    <div class="stat-label">Feels Like</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-icon water">
+                        <i-lucide [img]="DropletsIcon" size="20"></i-lucide>
+                    </div>
+                    <div class="stat-value">{{ weatherData.current.relativeHumidity || 'N/A' }}%</div>
+                    <div class="stat-label">Humidity</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-icon rain">
+                        <i-lucide [img]="CloudRainIcon" size="20"></i-lucide>
+                    </div>
+                    <div class="stat-value">0.0mm</div>
+                    <div class="stat-label">Rain (1h)</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-icon wind">
+                        <i-lucide [img]="WindIcon" size="20"></i-lucide>
+                    </div>
+                    <div class="stat-value">{{ weatherData.current.windSpeed }}</div>
+                    <div class="stat-label">Wind m/s</div>
+                </div>
+
+                <div class="stat-item">
+                    <div class="stat-icon cloud">
+                        <!-- Using CloudRain as placeholder for generic Cloud if Cloud not available in lucide-angular imports yet, 
+                     but assuming standard set. If not, fallback to text. -->
+                        <i-lucide [img]="CloudRainIcon" size="20"></i-lucide>
+                    </div>
+                    <div class="stat-value">{{ weatherData.current.cloudCover || 0 }}%</div>
+                    <div class="stat-label">Cloud Cover</div>
+                </div>
+            </div>
+
+            <!-- Weather Graph Toggle -->
+            <div class="graph-toggle">
+                <div class="toggle-bar">
+                    <span [class.active]="chartMode === 'hourly'" (click)="toggleChart('hourly')">Hourly (24h)</span>
+                    <span [class.active]="chartMode === 'daily'" (click)="toggleChart('daily')">Daily (7 days)</span>
+                </div>
+            </div>
+
+            <!-- Weather Graph -->
+            <div class="weather-graph-container" *ngIf="weatherData">
+                <app-line-chart [series]="chartDataSeries" [labels]="chartLabels" [height]="150" [showAxes]="true">
+                </app-line-chart>
+            </div>
+
+            <!-- Climate Outlook -->
+            <div class="climate-alert">
+                <strong>Climate Outlook:</strong> By 2100, Riverland grape growing season may be +2.8°C warmer with
+                -14mm
+                rainfall, increasing variability.
+            </div>
+
+            <div class="powered-by">Powered by OpenWeather (Mocked via Open-Meteo)</div>
+
+        </div>
+    </div>
+    <!-- END OVERVIEW TAB -->
+
+    <!-- CROP ADVISOR TAB CONTENT -->
+    <div *ngIf="activeTab === 'advisor'" class="advisor-container fade-in">
+
+        <!-- Advisor Header -->
+        <div class="advisor-header-row">
+            <div class="advisor-breadcrumbs">
+                <span class="brand">Antigravity</span> |
+                <span class="block-ref">{{ currentBlock.name }} - {{ currentBlock.crop }}</span> |
+                <span class="page-title">CROP ADVISOR</span> |
+                <span class="date">{{ advisorData.lastUpdated }}</span>
+                <div class="sub-text">
+                    Calculated from live sensor readings •
+                    <span class="refresh-timer">Next refresh in: {{ formatCountdown(nextRefreshSeconds) }}</span>
+                </div>
+            </div>
+            <div class="risk-score-badge">
+                <div class="score-label">RISK SCORE</div>
+                <button class="score-circle clickable" (click)="openRiskModal()">
+                    {{ advisorData.riskScore }}%
+                    <div class="check-icon" *ngIf="advisorData.riskScore < 20">
+                        <i-lucide [img]="CheckCircleIcon" size="14"></i-lucide>
+                    </div>
+                    <div class="check-icon warning" *ngIf="advisorData.riskScore >= 20">
+                        <i-lucide [img]="AlertTriangleIcon" size="14"></i-lucide>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sensor Analysis Section -->
+        <div class="advisor-section card-box">
+            <div class="section-title">
+                <i-lucide [img]="SproutIcon" size="20" class="icon-green"></i-lucide>
+                YOUR SENSORS SHOW RIGHT NOW
+            </div>
+
+            <div class="advisor-grid">
+                <div *ngFor="let item of advisorData.sensorAnalysis" class="analysis-card" [ngClass]="item.colorClass">
+                    <div class="card-header">
+                        <i-lucide [img]="item.icon" size="14"></i-lucide> {{ item.label }}
+                    </div>
+                    <div class="card-value">{{ item.value }}</div>
+                    <div class="card-status">
+                        <i-lucide [img]="CheckCircleIcon" size="12" *ngIf="item.colorClass === 'good'"></i-lucide>
+                        <i-lucide [img]="AlertTriangleIcon" size="12" *ngIf="item.colorClass !== 'good'"></i-lucide>
+                        <span>{{ item.status }}: {{ item.message }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Plan Section -->
+        <div class="advisor-section card-box action-plan">
+            <div class="section-title warning-title">
+                <i-lucide [img]="AlertTriangleIcon" size="20" class="icon-orange"></i-lucide>
+                <i-lucide [img]="ZapIcon" size="20" class="icon-orange"></i-lucide>
+                DO THIS TODAY - {{ currentBlock.name }} - {{ currentBlock.crop }}
+            </div>
+
+            <div *ngFor="let action of advisorData.actions" class="action-group">
+                <div class="priority-badge">PRIORITY {{ action.priority }}</div>
+                <div class="action-period">{{ action.label }}</div>
+
+                <div class="action-list">
+                    <div *ngFor="let item of action.items" class="action-item">
+                        <span class="checkbox"></span> {{ item }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DECISION SECTION -->
+        <div class="advisor-section card-box decision-section">
+            <div class="section-title">
+                <i-lucide [img]="SproutIcon" size="20" class="icon-green"></i-lucide>
+                <!-- Reference icon appears to be a rising chart, using Sprout or standard icon for now -->
+                YOUR {{ decisionData.totalArea }}ha DECISION
+            </div>
+
+            <!-- Current Status (Red) -->
+            <div class="decision-card card-red">
+                <div class="card-row">
+                    <div class="card-left">
+                        <div class="card-main-text">
+                            CURRENT ({{ decisionData.current.crop }})
+                            <span class="sub-financial">
+                                -${{ (decisionData.current.lossPerHa * -1) / 1000 }}k/ha × {{ decisionData.totalArea }}
+                            </span>
+                        </div>
+                        <div class="card-detail warning-text">
+                            <span class="x-mark">✕</span> {{ decisionData.current.yieldLossDetails }}
+                        </div>
+                    </div>
+                    <div class="card-right financial-negative">
+                        -${{ (decisionData.current.totalLoss * -1) / 1000 }}k/year
+                    </div>
+                </div>
+            </div>
+
+            <!-- Switch Option (Green) -->
+            <div class="decision-card card-green">
+                <div class="card-row">
+                    <div class="card-left">
+                        <div class="card-main-text">
+                            {{ decisionData.switch.area }}ha {{ decisionData.switch.crop | uppercase }} SWITCH
+                            <span class="sub-financial">
+                                +${{ decisionData.switch.profitPerHa / 1000 }}k/ha × {{ decisionData.switch.area }}
+                            </span>
+                        </div>
+                        <div class="card-detail success-text">
+                            <span class="check-mark">✔</span> Fits {{ decisionData.switch.allocationMatch }}% allocation
+                            perfectly
+                        </div>
+                        <div class="card-detail success-text">
+                            <span class="check-mark">✔</span>
+                            <span class="ph-val">{{ sensors[4].value }} pH</span> = PIRSA validated
+                            <span class="check-mark small">✔</span>
+                        </div>
+                    </div>
+                    <div class="card-right financial-positive">
+                        +${{ decisionData.switch.totalProfit / 1000 }}k/year
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keep Option (Green) -->
+            <div class="decision-card card-green">
+                <div class="card-row">
+                    <div class="card-left">
+                        <div class="card-main-text">
+                            KEEP {{ decisionData.keep.area }}ha {{ decisionData.keep.crop | uppercase }}
+                            <span class="sub-financial">
+                                +${{ decisionData.keep.profitPerHa / 1000 }}k/ha × {{ decisionData.keep.area }}
+                            </span>
+                        </div>
+                        <div class="card-detail success-text">
+                            <span class="check-mark">✔</span> Uses your existing skills
+                        </div>
+                    </div>
+                    <div class="card-right financial-positive">
+                        +${{ decisionData.keep.totalProfit / 1000 }}k/year
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIONS BAR -->
+        <div class="actions-bar">
+            <button class="btn btn-primary-dark">
+                <i-lucide [img]="DropletsIcon" size="16"></i-lucide> IRRIGATE BLOCK NOW
+            </button>
+            <button class="btn btn-secondary-light">
+                <i-lucide [img]="SproutIcon" size="16"></i-lucide> ORDER SHADE CLOTH
+            </button>
+            <button class="btn btn-text" (click)="openGrantModal()">
+                <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> ASSISTANCE GRANT GUIDE
+            </button>
+            <button class="btn btn-text" (click)="downloadPdf()">
+                <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> {{ decisionData.totalArea }}ha FULL PLAN → PDF
+            </button>
+            <div class="spacer"></div>
+            <button class="btn btn-text icon-only">
+                SAVE INSIGHTS
+            </button>
+            <button class="btn btn-text icon-only">
+                SHARE REPORT
+            </button>
+        </div>
+
+        <div class="disclaimer-footer">
+            Data Sources: Live IoT sensors, PIRSA 2025 Factsheet, WGCSA 2024 Crush Report. Demo prototype - consult
+            professional advisors before making decisions.
+        </div>
+
+    </div>
+
+    <!-- SENSOR HISTORY MODAL -->
+    <app-modal [isOpen]="isModalOpen" [title]="selectedSensor?.label + ' History'" (close)="closeModal()">
+        <div *ngIf="selectedSensor">
+            <p class="modal-subtitle">Last 5 Hours Trend</p>
+            <div class="modal-chart-wrapper">
+                <app-line-chart [data]="selectedSensor.history" [labels]="selectedSensor.historyLabels" color="#10b981"
+                    [height]="250" [showAxes]="true">
+                </app-line-chart>
+            </div>
+            <div class="modal-stats">
+                <div class="stat-box">
+                    <span class="label">Current</span>
+                    <span class="value">{{ selectedSensor.value }}{{ selectedSensor.unit }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Average</span>
+                    <span class="value">{{ getAverage(selectedSensor.history) | number:'1.1-1' }}{{ selectedSensor.unit
+                        }}</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">Max</span>
+                    <span class="value">{{ getMax(selectedSensor.history) }}{{ selectedSensor.unit }}</span>
+                </div>
+            </div>
+        </div>
+    </app-modal>
+
+    <!-- RISK ANALYSIS MODAL -->
+    <app-modal [isOpen]="isRiskModalOpen" [title]="currentBlock.crop + ' Risk Analysis'" (close)="closeRiskModal()">
+        <div class="risk-analysis-content" style="padding: 1rem;">
+            <div class="risk-overview" style="text-align: center; margin-bottom: 2rem;">
+                <div class="risk-gauge">
+                    <div class="gauge-value" style="font-size: 3rem; font-weight: 800;"
+                        [style.color]="advisorData.riskLevel === 'High' ? '#ef4444' : (advisorData.riskLevel === 'Moderate' ? '#f59e0b' : '#10b981')">
+                        {{ advisorData.riskScore }}%
+                    </div>
+                    <div class="gauge-label" style="font-weight: 700; color: #374151; text-transform: uppercase;">
+                        CURRENT RISK LEVEL: {{ advisorData.riskLevel }}</div>
+                </div>
+            </div>
+
+            <div class="analysis-details">
+                <h4
+                    style="margin-bottom: 1.5rem; color: #1e4d3b; border-bottom: 2px solid #ecfdf5; padding-bottom: 0.5rem;">
+                    Detailed Insights</h4>
+                <ul class="explanation-list" style="list-style: none; padding: 0;">
+                    <li *ngFor="let msg of riskExplanations"
+                        style="margin-bottom: 1rem; display: flex; gap: 0.75rem; font-size: 0.95rem; color: #4b5563; align-items: flex-start;">
+                        <i-lucide [img]="AlertTriangleIcon" size="18" class="icon-orange"
+                            *ngIf="msg.includes('outside') || msg.includes('CRITICAL')"></i-lucide>
+                        <i-lucide [img]="CheckCircleIcon" size="18" class="icon-green"
+                            *ngIf="!msg.includes('outside') && !msg.includes('CRITICAL')"></i-lucide>
+                        <span>{{ msg }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </app-modal>
+
+    <!-- GRANT FUNDING MODAL -->
+    <app-modal [isOpen]="isGrantModalOpen" title="" (close)="closeGrantModal()">
+        <div class="grant-modal-content">
+            <div class="grant-header">
+                <div class="grant-icon-wrapper">
+                    <span>🎯</span>
+                </div>
+                <h3>SA GRAPE GROWER FUNDING</h3>
+            </div>
+            <p class="grant-subtitle">{{ decisionData.switch.area }}ha of your farm is eligible for assistance</p>
+
+            <div class="grant-cards-container">
+                <!-- Card 1 -->
+                <div class="grant-card">
+                    <div class="grant-card-icon">
+                        <i-lucide [img]="ExternalLinkIcon" size="24" class="icon-blue-light"></i-lucide>
+                    </div>
+                    <div class="grant-card-info">
+                        <h4>SA Assistance Guide for Grape Growers</h4>
+                        <p>April 2025 - Complete funding overview and application process</p>
+                    </div>
+                    <button class="btn-open-pdf"
+                        (click)="openLink('https://www.pir.sa.gov.au/primary_industries/crops_and_pastures/fruit_and_nuts/wine_grapes')">
+                        <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
+                    </button>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="grant-card">
+                    <div class="grant-card-icon">
+                        <i-lucide [img]="ExternalLinkIcon" size="24" class="icon-blue-light"></i-lucide>
+                    </div>
+                    <div class="grant-card-info">
+                        <h4>SA Grape Growers Industry Fund 2025-30</h4>
+                        <p>PIRSA management plan with diversification grants</p>
+                    </div>
+                    <button class="btn-open-pdf" (click)="openLink('https://www.pir.sa.gov.au/grants_and_assistance')">
+                        <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
+                    </button>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="grant-card">
+                    <div class="grant-card-icon">
+                        <i-lucide [img]="SproutIcon" size="24" class="icon-green-light"></i-lucide>
+                    </div>
+                    <div class="grant-card-info">
+                        <h4>PIRSA Vineyard-to-Olive Conversion</h4>
+                        <p>CCW 2025 Factsheet - Technical conversion guide</p>
+                    </div>
+                    <button class="btn-open-pdf" (click)="openLink('https://www.pir.sa.gov.au/')">
+                        <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="grant-footer-alert">
+                <div class="check-icon-wrapper">
+                    <i-lucide [img]="CheckCircleIcon" size="20"></i-lucide>
+                </div>
+                <span>Covers 50% tree planting + diversification grants</span>
+            </div>
+        </div>
+    </app-modal>
+
+    <!-- Footer Prototype Notice -->
+    <div class="prototype-notice">
+        <div class="notice-icon">i</div>
+        <div class="notice-text">
+            <strong>Prototype Notice</strong><br>
+            This dashboard displays demo sensor data for demonstration purposes. Real IoT integration would connect to
+            physical sensors in your vineyard.
+        </div>
+    </div>
+</div>

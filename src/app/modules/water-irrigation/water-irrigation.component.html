@@ -1,0 +1,89 @@
+<div class="page-container fade-in">
+  <div class="page-header">
+    <div class="header-title-section">
+      <i-lucide [img]="DropletIcon" class="page-icon"></i-lucide>
+      <div>
+        <h1>Water & Irrigation</h1>
+        <p class="subtitle">Real-time hydration monitoring and irrigation management</p>
+      </div>
+    </div>
+    <div class="status-badge">
+      <i-lucide [img]="ActivityIcon" class="status-icon"></i-lucide>
+      <span>System Active</span>
+    </div>
+  </div>
+  
+  <div class="metrics-grid">
+    <div class="metric-card hover-lift">
+      <div class="card-header">
+        <i-lucide [img]="WavesIcon" class="card-icon"></i-lucide>
+        <h3>Current Hydration</h3>
+      </div>
+      <div class="metric-value">
+        <span class="value">64.2</span>
+        <span class="unit">%</span>
+      </div>
+      <div class="metric-footer">
+        <span class="status-indicator status-normal"></span>
+        <span>Optimal Range</span>
+      </div>
+    </div>
+    
+    <div class="metric-card hover-lift">
+      <div class="card-header">
+        <i-lucide [img]="CalendarIcon" class="card-icon"></i-lucide>
+        <h3>Next Schedule</h3>
+      </div>
+      <div class="metric-value">
+        <span class="value">Tomorrow</span>
+        <span class="unit">05:00 AM</span>
+      </div>
+      <div class="metric-footer">
+        <span>Duration: 2.5 hours</span>
+      </div>
+    </div>
+    
+    <div class="metric-card alert-card hover-lift">
+      <div class="card-header">
+        <i-lucide [img]="AlertIcon" class="card-icon"></i-lucide>
+        <h3>Leak Detection</h3>
+      </div>
+      <div class="metric-value">
+        <span class="value">None</span>
+      </div>
+      <div class="metric-footer">
+        <span>Last sweep: 15m ago</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="content-section mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h3>Soil Moisture Breakdown</h3>
+      </div>
+      <div class="card-body">
+        <div class="chart-placeholder">
+          <p>Soil Moisture Depth Analysis Chart</p>
+          <div class="depth-bar-container">
+            <div class="depth-row">
+              <span>30cm</span>
+              <div class="progress-bar"><div class="fill" style="width: 75%"></div></div>
+              <span>75%</span>
+            </div>
+            <div class="depth-row">
+              <span>60cm</span>
+              <div class="progress-bar"><div class="fill" style="width: 58%"></div></div>
+              <span>58%</span>
+            </div>
+            <div class="depth-row">
+              <span>90cm</span>
+              <div class="progress-bar"><div class="fill" style="width: 42%"></div></div>
+              <span>42%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

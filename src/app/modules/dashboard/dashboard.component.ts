@@ -5,6 +5,8 @@ import { LineChartComponent, ChartSeries } from '../../shared/components/line-ch
 import { ModalComponent } from '../../shared/components/modal.component';
 import { LucideAngularModule, Droplets, Thermometer, Wind, Sprout, CloudRain, ExternalLink, RefreshCw, CheckCircle, AlertTriangle, Zap } from 'lucide-angular';
 import { Subscription, interval } from 'rxjs';
+import { AuthService } from '../../core/services/auth.service';
+import { User as AppUser } from '../../core/models/user.model';
 
 interface Sensor {
   id: string;
@@ -43,6 +45,36 @@ const CROP_PROFILES: Record<string, any> = {
     ph: { min: 6.0, max: 8.0, optimal: [6.5, 7.5] },
     humidity: { min: 20, max: 80, optimal: [40, 60] }
   },
+  'Grapes': {
+    temp: { min: 10, max: 32, optimal: [18, 28] },
+    moisture: { min: 20, max: 85, optimal: [35, 65] },
+    ph: { min: 6.0, max: 8.0, optimal: [6.5, 7.5] },
+    humidity: { min: 20, max: 80, optimal: [40, 60] }
+  },
+  'Wheat': {
+    temp: { min: 5, max: 35, optimal: [15, 30] },
+    moisture: { min: 15, max: 75, optimal: [30, 60] },
+    ph: { min: 6.0, max: 7.5, optimal: [6.5, 7.0] },
+    humidity: { min: 20, max: 80, optimal: [40, 70] }
+  },
+  'Citrus': {
+    temp: { min: 13, max: 38, optimal: [20, 30] },
+    moisture: { min: 25, max: 85, optimal: [40, 70] },
+    ph: { min: 5.5, max: 7.5, optimal: [6.0, 7.0] },
+    humidity: { min: 30, max: 85, optimal: [50, 70] }
+  },
+  'Almonds': {
+    temp: { min: 7, max: 40, optimal: [15, 30] },
+    moisture: { min: 20, max: 80, optimal: [35, 65] },
+    ph: { min: 6.0, max: 8.5, optimal: [6.5, 8.0] },
+    humidity: { min: 20, max: 75, optimal: [40, 60] }
+  },
+  'Canola': {
+    temp: { min: 5, max: 30, optimal: [12, 25] },
+    moisture: { min: 20, max: 80, optimal: [35, 65] },
+    ph: { min: 5.5, max: 8.0, optimal: [6.0, 7.5] },
+    humidity: { min: 30, max: 85, optimal: [50, 75] }
+  },
   'Default': {
     temp: { min: 5, max: 35, optimal: [15, 30] },
     moisture: { min: 15, max: 90, optimal: [30, 70] },
@@ -75,26 +107,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   weatherData: WeatherData | null = null;
   isDaytime: boolean = true;
 
-  currentUser: User = {
-    id: 'u1',
-    name: 'Maria',
-    blocks: [
-      {
-        id: 'b1',
-        name: 'Block A',
-        crop: 'Chardonnay',
-        area: 8.0,
-        soilType: 'Red Brown Earth',
-        location: {
-          name: 'Berri, SA',
-          lat: -34.2850,
-          lon: 140.6050
-        }
-      }
-    ]
-  };
-
-  currentBlock: Block = this.currentUser.blocks[0];
+  currentUser: User | null = null;
+  currentBlock: Block | null = null;
 
   // Mock Sensors
   sensors: Sensor[] = [
@@ -220,14 +234,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private sensorInterval!: Subscription;
   private weatherInterval!: Subscription;
   private countdownInterval!: Subscription;
+  private authSubscription!: Subscription;
 
-  constructor(public weatherService: WeatherService) { }
+  constructor(
+    public weatherService: WeatherService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
-    this.refreshWeather();
-
-    // Initialize advisor data immediately
-    this.updateAdvisorData();
+    // Subscribe to active user changes
+    this.authSubscription = this.authService.getActiveUser().subscribe(appUser => {
+      if (appUser) {
+        this.loadUserData(appUser);
+        this.refreshWeather();
+        this.updateAdvisorData();
+      }
+    });
 
     // Refresh weather every 5 minutes
     this.weatherInterval = interval(300000).subscribe(() => this.refreshWeather());
@@ -246,10 +268,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadUserData(appUser: AppUser): void {
+    // Map AppUser to dashboard User format
+    this.currentUser = {
+      id: appUser.userId,
+      name: appUser.userName,
+      blocks: [
+        {
+          id: 'b1',
+          name: appUser.farmName,
+          crop: appUser.primaryCropName,
+          area: 10.0, // Default area, can be made dynamic later
+          soilType: appUser.primarySoilType,
+          location: {
+            name: appUser.farmLocation,
+            lat: this.getLatLongForLocation(appUser.farmLocation).lat,
+            lon: this.getLatLongForLocation(appUser.farmLocation).lon
+          }
+        }
+      ]
+    };
+    this.currentBlock = this.currentUser.blocks[0];
+  }
+
+  getLatLongForLocation(location: string): { lat: number; lon: number } {
+    // Map locations to coordinates (South Australia wine regions)
+    const locationMap: Record<string, { lat: number; lon: number }> = {
+      'Renmark, SA': { lat: -34.1747, lon: 140.7472 },        // Riverland
+      'Tanunda, SA': { lat: -34.5267, lon: 138.9600 },        // Barossa Valley
+      'Willunga, SA': { lat: -35.2733, lon: 138.5500 },       // McLaren Vale
+      'Waikerie, SA': { lat: -34.1833, lon: 139.9833 },       // Riverland
+      'Nuriootpa, SA': { lat: -34.4667, lon: 138.9833 }       // Barossa Valley
+    };
+    return locationMap[location] || { lat: -34.1747, lon: 140.7472 }; // Default to Renmark
+  }
+
   ngOnDestroy(): void {
     if (this.sensorInterval) this.sensorInterval.unsubscribe();
     if (this.weatherInterval) this.weatherInterval.unsubscribe();
     if (this.countdownInterval) this.countdownInterval.unsubscribe();
+    if (this.authSubscription) this.authSubscription.unsubscribe();
   }
 
   simulateSensorReadings() {
@@ -337,6 +395,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   evaluateParameter(analysis: any, type: string, value: number) {
+    if (!this.currentBlock) return;
     const crop = this.currentBlock.crop;
     const profile = CROP_PROFILES[crop] || CROP_PROFILES['Default'];
     const thresholds = profile[type];
@@ -357,6 +416,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   calculateRiskStatus() {
+    if (!this.currentBlock) return;
     const crop = this.currentBlock.crop;
     const profile = CROP_PROFILES[crop] || CROP_PROFILES['Default'];
     this.riskExplanations = [];
@@ -397,6 +457,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   calculateDecisions() {
+    if (!this.currentBlock) return;
     this.decisionData.totalArea = this.currentBlock.area;
     this.decisionData.current.crop = this.currentBlock.crop;
 
@@ -489,7 +550,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     doc.text("Promasecure Riverland MVP", 105, 15, { align: 'center' });
 
     doc.setFontSize(14);
-    doc.text(`Block ${this.currentBlock.name} - ${this.currentBlock.crop} - ${this.decisionData.totalArea}ha Plan`, 105, 25, { align: 'center' });
+    doc.text(`Block ${this.currentBlock?.name || 'N/A'} - ${this.currentBlock?.crop || 'N/A'} - ${this.decisionData.totalArea}ha Plan`, 105, 25, { align: 'center' });
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -622,7 +683,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     doc.text("Eligible for SA Grape Growers Assistance Fund! 50% planting cost coverage", 105, 290, { align: 'center' });
 
     // Save
-    doc.save(`Promasecure_Plan_${this.currentBlock.name}_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Promasecure_Plan_${this.currentBlock?.name || 'Farm'}_${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
 

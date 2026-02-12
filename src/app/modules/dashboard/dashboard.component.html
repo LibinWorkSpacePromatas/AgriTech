@@ -18,16 +18,16 @@
     <!-- BLOCK INFO CARD -->
     <div class="block-info-card">
         <div class="block-details">
-            <h2>{{ currentBlock.name }} - {{ currentBlock.crop }}</h2>
+            <h2>{{ currentBlock?.name }} - {{ currentBlock?.crop }}</h2>
             <div class="meta-row">
-                <span><i-lucide [img]="SproutIcon" size="14"></i-lucide> {{ currentBlock.area }} hectares</span>
-                <span>{{ currentBlock.crop }}</span>
-                <span>{{ currentBlock.soilType }}</span>
+                <span><i-lucide [img]="SproutIcon" size="14"></i-lucide> {{ currentBlock?.area }} hectares</span>
+                <span>{{ currentBlock?.crop }}</span>
+                <span>{{ currentBlock?.soilType }}</span>
             </div>
         </div>
         <div class="location-info">
-            <div class="location-name">{{ currentBlock.location.name }}</div>
-            <div class="coords">{{ currentBlock.location.lat }}°S, {{ currentBlock.location.lon }}°E</div>
+            <div class="location-name">{{ currentBlock?.location?.name }}</div>
+            <div class="coords">{{ currentBlock?.location?.lat }}°S, {{ currentBlock?.location?.lon }}°E</div>
         </div>
     </div>
 
@@ -178,7 +178,7 @@
         <div class="advisor-header-row">
             <div class="advisor-breadcrumbs">
                 <span class="brand">Antigravity</span> |
-                <span class="block-ref">{{ currentBlock.name }} - {{ currentBlock.crop }}</span> |
+                <span class="block-ref">{{ currentBlock?.name }} - {{ currentBlock?.crop }}</span> |
                 <span class="page-title">CROP ADVISOR</span> |
                 <span class="date">{{ advisorData.lastUpdated }}</span>
                 <div class="sub-text">
@@ -227,7 +227,7 @@
             <div class="section-title warning-title">
                 <i-lucide [img]="AlertTriangleIcon" size="20" class="icon-orange"></i-lucide>
                 <i-lucide [img]="ZapIcon" size="20" class="icon-orange"></i-lucide>
-                DO THIS TODAY - {{ currentBlock.name }} - {{ currentBlock.crop }}
+                DO THIS TODAY - {{ currentBlock?.name }} - {{ currentBlock?.crop }}
             </div>
 
             <div *ngFor="let action of advisorData.actions" class="action-group">
@@ -375,7 +375,8 @@
     </app-modal>
 
     <!-- RISK ANALYSIS MODAL -->
-    <app-modal [isOpen]="isRiskModalOpen" [title]="currentBlock.crop + ' Risk Analysis'" (close)="closeRiskModal()">
+    <app-modal [isOpen]="isRiskModalOpen" [title]="(currentBlock?.crop || 'Crop') + ' Risk Analysis'"
+        (close)="closeRiskModal()">
         <div class="risk-analysis-content" style="padding: 1rem;">
             <div class="risk-overview" style="text-align: center; margin-bottom: 2rem;">
                 <div class="risk-gauge">

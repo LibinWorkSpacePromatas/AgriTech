@@ -1,8 +1,10 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { MOCK_USER } from '../../shared/constants';
-import { LucideAngularModule, Bot, Menu } from 'lucide-angular';
+import { Router, RouterModule } from '@angular/router';
+import { LucideAngularModule, Bot, Menu, LogOut } from 'lucide-angular';
+import { AuthService } from '../services/auth.service';
+import { User } from '../models/user.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -17,8 +19,8 @@ import { LucideAngularModule, Bot, Menu } from 'lucide-angular';
           </button>
           
           <div class="welcome-section">
-            <h1 class="welcome-title">Welcome back, {{ userProfile.name.split(' ')[0] }}!</h1>
-            <p class="welcome-subtitle">Here's your block conditions for today.</p>
+            <h1 class="welcome-title">Welcome back, {{ currentUser ? currentUser.userName.split(' ')[0] : 'User' }}!</h1>
+            <p class="welcome-subtitle">{{ currentUser ? currentUser.farmName : 'Loading...' }}</p>
           </div>
         </div>
         
@@ -102,7 +104,7 @@ import { LucideAngularModule, Bot, Menu } from 'lucide-angular';
     .header-right {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
     }
     
     .grower-gpt-btn {
@@ -133,6 +135,34 @@ import { LucideAngularModule, Bot, Menu } from 'lucide-angular';
       color: var(--primary-green);
     }
     
+    .sign-out-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--white);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      color: var(--gray-700);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .sign-out-btn:hover {
+      background: #fee;
+      border-color: #dc2626;
+      color: #dc2626;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .logout-icon {
+      width: var(--icon-md);
+      height: var(--icon-md);
+    }
+    
     @media (min-width: 1025px) {
       .app-header {
         left: var(--sidebar-width);
@@ -158,12 +188,43 @@ import { LucideAngularModule, Bot, Menu } from 'lucide-angular';
         padding: 0.5rem;
         border-radius: 50%;
       }
+      
+      .sign-out-btn {
+        padding: 0.5rem;
+        border-radius: 50%;
+      }
     }
   `]
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit, OnDestroy {
   @Output() toggleSidebar = new EventEmitter<void>();
-  userProfile = MOCK_USER;
+
+  currentUser: User | null = null;
+  private userSubscription?: Subscription;
+
   BotIcon = Bot;
   MenuIcon = Menu;
+  LogOutIcon = LogOut;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
+
+  ngOnInit(): void {
+    this.userSubscription = this.authService.getActiveUser().subscribe(user => {
+      this.currentUser = user;
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
+    }
+  }
+
+  signOut(): void {
+    this.authService.logout();
+    this.router.navigate(['/select-user']);
+  }
 }

@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { NAVIGATION_ITEMS, MOCK_BLOCKS, MOCK_USER } from '../../shared/constants';
 import { BlockSelectorComponent } from '../../shared/components/block-selector.component';
 import { Block } from '../../shared/models';
 import { BlockService } from '../../shared/services/block.service';
 import { LucideAngularModule, Leaf, LayoutDashboard, Droplet, TrendingUp, Sprout, MessageCircle, LogOut, X } from 'lucide-angular';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -46,14 +47,7 @@ import { LucideAngularModule, Leaf, LayoutDashboard, Droplet, TrendingUp, Sprout
       </nav>
       
       <div class="sidebar-footer">
-        <div class="user-profile">
-          <div class="user-avatar">{{ userProfile.initials }}</div>
-          <div class="user-info">
-            <div class="user-name">{{ userProfile.name }}</div>
-            <div class="user-company">{{ userProfile.company }}</div>
-          </div>
-        </div>
-        <button class="sign-out-btn">
+        <button class="sign-out-btn" (click)="signOut()">
           <i-lucide [img]="LogOutIcon" class="sign-out-icon"></i-lucide>
           <span>Sign Out</span>
         </button>
@@ -166,46 +160,6 @@ import { LucideAngularModule, Leaf, LayoutDashboard, Droplet, TrendingUp, Sprout
       border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    .user-profile {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem;
-      margin-bottom: 0.5rem;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: var(--radius-md);
-    }
-    
-    .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--accent-green-active);
-      color: var(--primary-green-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.875rem;
-    }
-    
-    .user-info {
-      flex: 1;
-    }
-    
-    .user-name {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--white);
-      line-height: 1.3;
-    }
-    
-    .user-company {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.6);
-      line-height: 1.3;
-    }
-    
     .sign-out-btn {
       display: flex;
       align-items: center;
@@ -255,7 +209,11 @@ export class SidebarComponent {
   selectedBlock: Block | null = null;
   userProfile = MOCK_USER;
 
-  constructor(private blockService: BlockService) {
+  constructor(
+    private blockService: BlockService,
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.blockService.selectedBlock$.subscribe(block => {
       this.selectedBlock = block;
     });
@@ -281,5 +239,10 @@ export class SidebarComponent {
 
   onBlockSelected(block: Block): void {
     this.blockService.setSelectedBlock(block);
+  }
+
+  signOut(): void {
+    this.authService.logout();
+    this.router.navigate(['/select-user']);
   }
 }

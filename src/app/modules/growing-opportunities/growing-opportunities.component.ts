@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Sprout, ChevronRight, X, ExternalLink } from 'lucide-angular';
+import { UserDataService } from '../../core/services/user-data.service';
+import { User } from '../../core/models/user.model';
 
 interface Opportunity {
     id: string;
@@ -20,13 +22,14 @@ interface Opportunity {
     templateUrl: './growing-opportunities.component.html',
     styleUrls: ['./growing-opportunities.component.css']
 })
-export class GrowingOpportunitiesComponent {
+export class GrowingOpportunitiesComponent implements OnInit {
     SproutIcon = Sprout;
     ChevronRightIcon = ChevronRight;
     XIcon = X;
     ExternalLinkIcon = ExternalLink;
 
     selectedOpportunity: Opportunity | null = null;
+    user: User | undefined;
 
     opportunities: Opportunity[] = [
         {
@@ -99,17 +102,23 @@ export class GrowingOpportunitiesComponent {
             description: 'Several successful Riverland growers have diversified their operations to include multiple crop types, reducing their exposure to single commodity price fluctuations. Examples include combining citrus with wine grapes, or adding oil...',
             fullDescription: 'Several successful Riverland growers have diversified their operations to include multiple crop types, reducing their exposure to single-commodity price fluctuations. Examples include combining citrus with wine grapes, or adding olive groves to existing vineyard operations. This approach provides multiple income streams and spreads risk across different market cycles.',
             keyPoints: [
-                'Diversified income streams reduce risk',
-                'Complementary crop timing spreads labour',
-                'Shared infrastructure across crops',
-                'Market flexibility advantages',
-                'Case studies show 30% income stability improvement'
+                'Multiple income streams reduce risk',
+                'Spread workload across seasons',
+                'Better utilization of infrastructure',
+                'Access to diverse export markets',
+                'Enhanced biodiversity and soil health'
             ],
-            tags: ['multi-crop', 'diversification', 'risk-management'],
-            source: 'Riverland Wine Industry Development',
-            sourceUrl: 'https://www.riverlandwine.com.au'
+            tags: ['diversification', 'risk-management', 'export-markets'],
+            source: 'AgriFutures Australia',
+            sourceUrl: 'https://agrifutures.com.au'
         }
     ];
+
+    constructor(private userDataService: UserDataService) {}
+
+    ngOnInit() {
+        this.user = this.userDataService.getUserById('U001');
+    }
 
     openOpportunity(opportunity: Opportunity): void {
         this.selectedOpportunity = opportunity;

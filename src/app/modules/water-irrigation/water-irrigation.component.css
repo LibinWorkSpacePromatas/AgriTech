@@ -347,6 +347,71 @@
 .text-green-600 { color: #16a34a; }
 .text-orange-600 { color: #ea580c; }
 .text-blue-600 { color: #2563eb; }
+
+/* Responsive Mobile View for Water Irrigation */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-container {
+    padding: 12px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .location-picker {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .coords-input {
+    flex-direction: column;
+  }
+
+  .field input {
+    width: 100%;
+  }
+
+  .summary-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .formula-box {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .math-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .mini-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .depth-item {
+    grid-template-columns: 1fr 40px;
+    gap: 0.5rem;
+  }
+
+  .depth-label {
+    font-size: 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+}
 .font-bold { font-weight: 700; }
 
 .depth-status {

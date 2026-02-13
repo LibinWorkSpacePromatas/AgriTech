@@ -17,5 +17,9 @@ export const environment = {
       minLon: 112,
       maxLon: 154
     }
+  },
+  ollama: {
+    host: 'https://openrouter.ai/api/v1',
+    apiKey: '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'
   }
 };

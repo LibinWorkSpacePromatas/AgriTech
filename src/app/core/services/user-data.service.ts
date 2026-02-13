@@ -18,6 +18,18 @@ export class UserDataService {
             blocks: [
                 { lanslu: 'BCPKFB', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Loamy sand over red clay', area: 9, crop: 'Shiraz', latitude: -34.1747, longitude: 140.7447 },
                 { lanslu: 'BCPKFA', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Sandy loam over red clay', area: 6, crop: 'Cabernet Sauvignon', latitude: -34.1780, longitude: 140.7520 }
+            ],
+            financials: {
+                projectedRoi: 12.4,
+                riskIndex: 'Low',
+                potentialLoss: 0,
+                estimatedYield: 4.2,
+                marketValue: 1250,
+                confidenceLevel: 92
+            },
+            opportunities: [
+                { id: 'olives-lower-water', title: 'Olives: A Lower-Water Option for Riverland', tags: ['olives', 'diversification'] },
+                { id: 'government-funding', title: 'Government Funding to Support Diversification', tags: ['funding', 'grants'] }
             ]
         },
         {

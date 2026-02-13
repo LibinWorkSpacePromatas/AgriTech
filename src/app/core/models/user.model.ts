@@ -24,4 +24,17 @@ export interface User {
     primaryCropName: string;
     primarySoilType: string;
     blocks: UserBlock[];
+    financials?: {
+        projectedRoi: number;
+        riskIndex: 'Low' | 'Medium' | 'High';
+        potentialLoss: number;
+        estimatedYield: number;
+        marketValue: number;
+        confidenceLevel: number;
+    };
+    opportunities?: {
+        id: string;
+        title: string;
+        tags: string[];
+    }[];
 }

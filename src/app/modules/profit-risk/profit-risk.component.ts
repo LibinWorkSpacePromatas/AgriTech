@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdelaideTimePipe } from '../../shared/pipes/adelaide-time.pipe';
 import { LucideAngularModule, TrendingUp, AlertTriangle, DollarSign, BarChart3, ShieldCheck } from 'lucide-angular';
+import { UserDataService } from '../../core/services/user-data.service';
+import { User } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-profit-risk',
@@ -19,14 +21,14 @@ import { LucideAngularModule, TrendingUp, AlertTriangle, DollarSign, BarChart3, 
         </div>
       </div>
       
-      <div class="metrics-grid">
+      <div class="metrics-grid" *ngIf="user && user.financials">
         <div class="metric-card gold-card hover-lift">
           <div class="card-header">
             <i-lucide [img]="DollarIcon" class="card-icon"></i-lucide>
             <h3>Projected ROI</h3>
           </div>
           <div class="metric-value">
-            <span class="value">12.4</span>
+            <span class="value">{{user.financials.projectedRoi}}</span>
             <span class="unit">%</span>
           </div>
           <div class="metric-footer">
@@ -41,11 +43,11 @@ import { LucideAngularModule, TrendingUp, AlertTriangle, DollarSign, BarChart3, 
             <h3>Risk Index</h3>
           </div>
           <div class="metric-value">
-            <span class="value">Low</span>
+            <span class="value">{{user.financials.riskIndex}}</span>
           </div>
           <div class="metric-footer">
-            <span class="status-indicator status-normal"></span>
-            <span>Minimal environmental threat</span>
+            <span class="status-indicator" [ngClass]="user.financials.riskIndex === 'Low' ? 'status-normal' : 'status-warning'"></span>
+            <span>{{user.financials.riskIndex === 'Low' ? 'Minimal environmental threat' : 'Potential environmental threat'}}</span>
           </div>
         </div>
         
@@ -55,15 +57,15 @@ import { LucideAngularModule, TrendingUp, AlertTriangle, DollarSign, BarChart3, 
             <h3>Potential Loss</h3>
           </div>
           <div class="metric-value">
-            <span class="value">$0.00</span>
+            <span class="value">{{user.financials.potentialLoss | currency}}</span>
           </div>
           <div class="metric-footer">
-            <span>No active threats detected</span>
+            <span>{{user.financials.potentialLoss === 0 ? 'No active threats detected' : 'Threats detected'}}</span>
           </div>
         </div>
       </div>
       
-      <div class="content-section mt-4">
+      <div class="content-section mt-4" *ngIf="user && user.financials">
         <div class="card">
           <div class="card-header">
             <h3>Harvest Yield Projections</h3>
@@ -72,17 +74,17 @@ import { LucideAngularModule, TrendingUp, AlertTriangle, DollarSign, BarChart3, 
             <div class="projection-stats">
               <div class="stat-item">
                 <span class="stat-label">Estimated Tonnage</span>
-                <span class="stat-value">4.2 t/ha</span>
+                <span class="stat-value">{{user.financials.estimatedYield}} t/ha</span>
               </div>
               <div class="stat-divider"></div>
               <div class="stat-item">
                 <span class="stat-label">Market Value (Est.)</span>
-                <span class="stat-value">$1,250 / ton</span>
+                <span class="stat-value">{{user.financials.marketValue | currency}} / ton</span>
               </div>
               <div class="stat-divider"></div>
               <div class="stat-item">
                 <span class="stat-label">Confidence Level</span>
-                <span class="stat-value">92%</span>
+                <span class="stat-value">{{user.financials.confidenceLevel}}%</span>
               </div>
             </div>
           </div>
@@ -100,162 +102,176 @@ import { LucideAngularModule, TrendingUp, AlertTriangle, DollarSign, BarChart3, 
     .header-title-section {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 1.5rem;
     }
-    
+
     .page-icon {
-      width: var(--icon-xl);
-      height: var(--icon-xl);
-      color: var(--primary-green);
+      width: 48px;
+      height: 48px;
+      color: #059669;
     }
-    
-    .subtitle {
-      color: var(--gray-600);
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1e293b;
       margin: 0;
     }
-    
+
+    .subtitle {
+      color: #64748b;
+      margin: 0.25rem 0 0 0;
+    }
+
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
     }
-    
+
     .metric-card {
-      background: var(--white);
+      background: white;
+      border-radius: 1.25rem;
       padding: 1.5rem;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
+      border: 1px solid #e2e8f0;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.25rem;
     }
-    
+
     .gold-card {
-      border-top: 4px solid #f59e0b;
+      background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+      border-color: #fde68a;
     }
-    
+
     .card-header {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      color: var(--gray-700);
     }
-    
-    .card-header h3 {
-      font-size: 0.875rem;
+
+    .card-icon {
+      width: 24px;
+      height: 24px;
+      color: #d97706;
+    }
+
+    h3 {
+      font-size: 1rem;
       font-weight: 600;
+      color: #475569;
       margin: 0;
     }
-    
-    .card-icon {
-      width: var(--icon-md);
-      height: var(--icon-md);
-      color: var(--primary-green);
-    }
-    
+
     .metric-value {
       display: flex;
       align-items: baseline;
       gap: 0.25rem;
     }
-    
+
     .value {
-      font-size: 2.25rem;
-      font-weight: 700;
-      color: var(--gray-900);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #1e293b;
     }
-    
+
     .unit {
-      font-size: 1rem;
-      color: var(--gray-500);
-      font-weight: 500;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #64748b;
     }
-    
+
     .metric-footer {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-size: 0.875rem;
-      color: var(--gray-500);
+      color: #64748b;
+      font-weight: 500;
     }
-    
-    .footer-icon {
-      width: var(--icon-sm);
-      height: var(--icon-sm);
-      color: #10b981;
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
     }
-    
+
+    .status-normal { background-color: #10b981; }
+    .status-warning { background-color: #f59e0b; }
+
     .projection-stats {
       display: flex;
       justify-content: space-around;
-      padding: 1.5rem;
-      background: var(--gray-50);
-      border-radius: var(--radius-md);
+      align-items: center;
+      padding: 1rem 0;
     }
-    
+
     .stat-item {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.5rem;
     }
-    
+
     .stat-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--gray-500);
-      font-weight: 600;
+      font-size: 0.875rem;
+      color: #64748b;
+      font-weight: 500;
     }
-    
+
     .stat-value {
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      color: var(--gray-900);
+      color: #1e293b;
     }
-    
+
     .stat-divider {
       width: 1px;
-      background: var(--gray-200);
+      height: 40px;
+      background-color: #e2e8f0;
     }
-    
-    @media (max-width: 1024px) {
-      .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-      
-      .metrics-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      
-      .projection-stats {
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-      
-      .stat-divider {
-        width: 100%;
-        height: 1px;
-      }
+
+    .mt-4 { margin-top: 1.5rem; }
+
+    .card {
+      background: white;
+      border-radius: 1.25rem;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
     }
-    
-    @media (max-width: 640px) {
-      .metrics-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .value {
-        font-size: 1.75rem;
-      }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .hover-lift {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     }
   `]
 })
-export class ProfitRiskComponent {
+export class ProfitRiskComponent implements OnInit {
   TrendingIcon = TrendingUp;
   AlertIcon = AlertTriangle;
   DollarIcon = DollarSign;
   BarChartIcon = BarChart3;
   ShieldIcon = ShieldCheck;
+
+  user: User | undefined;
+
+  constructor(private userDataService: UserDataService) {}
+
+  ngOnInit() {
+    this.user = this.userDataService.getUserById('U001');
+  }
 }

@@ -233,255 +233,496 @@
                 DO THIS TODAY - {{ currentBlock?.name }} - {{ currentBlock?.crop }}
             </div>
 
-            <div *ngFor="let action of advisorData.actions" class="action-group">
-                <div class="priority-badge">PRIORITY {{ action.priority }}</div>
-                <div class="action-period">{{ action.label }}</div>
+            <div class="actions-horizontal-grid">
+                <div *ngFor="let action of advisorData.actions" class="action-card-horizontal premium-action-card"
+                    [ngClass]="'severity-' + action.severity">
+                    <div class="action-card-header">
+                        <div class="priority-badge-horizontal" [ngClass]="'priority-' + action.priority">
+                            PRIORITY {{ action.priority }}
+                        </div>
+                        <div class="severity-badge-horizontal" [ngClass]="'severity-' + action.severity">
+                            <i-lucide [img]="action.severity === 'critical' ? AlertTriangleIcon : CheckCircleIcon"
+                                size="12"></i-lucide>
+                            {{ action.severity | uppercase }}
+                        </div>
+                    </div>
 
-                <div class="action-list">
-                    <div *ngFor="let item of action.items" class="action-item">
-                        <span class="checkbox"></span> {{ item }}
+                    <div class="action-period-horizontal">{{ action.label }}</div>
+
+                    <div class="action-items-horizontal">
+                        <div *ngFor="let item of action.items; let i = index" class="action-item-horizontal">
+                            <span class="item-number">{{ i + 1 }}</span>
+                            <span class="item-text">{{ item }}</span>
+                        </div>
+                    </div>
+
+                    <div class="action-footer-horizontal" *ngIf="action.estimatedCost || action.estimatedTime">
+                        <div class="footer-item" *ngIf="action.estimatedCost">
+                            <span class="footer-label">Est. Cost:</span>
+                            <span class="footer-value">{{ action.estimatedCost }}</span>
+                        </div>
+                        <div class="footer-item" *ngIf="action.estimatedTime">
+                            <span class="footer-label">Time:</span>
+                            <span class="footer-value">{{ action.estimatedTime }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- DECISION SECTION -->
-        <div class="advisor-section card-box decision-section">
-            <div class="section-title">
-                <i-lucide [img]="SproutIcon" size="20" class="icon-green"></i-lucide>
-                <!-- Reference icon appears to be a rising chart, using Sprout or standard icon for now -->
-                YOUR {{ decisionData.totalArea }}ha DECISION
+        <!-- Yield Impact Visualization -->
+        <div class="yield-impact-card" *ngIf="yieldImpact">
+            <div class="impact-header">
+                <i-lucide [img]="AlertTriangleIcon" size="18" class="icon-orange"></i-lucide>
+                <span>Current Yield Impact Analysis</span>
             </div>
-
-            <!-- Current Status (Red) -->
-            <div class="decision-card card-red">
-                <div class="card-row">
-                    <div class="card-left">
-                        <div class="card-main-text">
-                            CURRENT ({{ decisionData.current.crop }})
-                            <span class="sub-financial">
-                                -${{ (decisionData.current.lossPerHa * -1) / 1000 }}k/ha × {{ decisionData.totalArea }}
-                            </span>
-                        </div>
-                        <div class="card-detail warning-text">
-                            <span class="x-mark">✕</span> {{ decisionData.current.yieldLossDetails }}
+            <div class="impact-content">
+                <div class="yield-gauge">
+                    <div class="gauge-bar">
+                        <div class="gauge-fill" [style.width.%]="yieldImpact.currentYieldPercent"
+                            [ngClass]="yieldImpact.currentYieldPercent < 60 ? 'critical' : yieldImpact.currentYieldPercent < 80 ? 'warning' : 'good'">
                         </div>
                     </div>
-                    <div class="card-right financial-negative">
-                        -${{ (decisionData.current.totalLoss * -1) / 1000 }}k/year
+                    <div class="gauge-labels">
+                        <span class="current-yield">{{ yieldImpact.currentYieldPercent.toFixed(0) }}% Yield</span>
+                        <span class="projected-loss">{{ formatCurrency(-yieldImpact.projectedLoss) }}
+                            Loss</span>
                     </div>
                 </div>
-            </div>
-
-            <!-- Switch Option (Green) -->
-            <div class="decision-card card-green">
-                <div class="card-row">
-                    <div class="card-left">
-                        <div class="card-main-text">
-                            {{ decisionData.switch.area }}ha {{ decisionData.switch.crop | uppercase }} SWITCH
-                            <span class="sub-financial">
-                                +${{ decisionData.switch.profitPerHa / 1000 }}k/ha × {{ decisionData.switch.area }}
-                            </span>
-                        </div>
-                        <div class="card-detail success-text">
-                            <span class="check-mark">✔</span> Fits {{ decisionData.switch.allocationMatch }}% allocation
-                            perfectly
-                        </div>
-                        <div class="card-detail success-text">
-                            <span class="check-mark">✔</span>
-                            <span class="ph-val">{{ sensors[4].value }} pH</span> = PIRSA validated
-                            <span class="check-mark small">✔</span>
-                        </div>
-                    </div>
-                    <div class="card-right financial-positive">
-                        +${{ decisionData.switch.totalProfit / 1000 }}k/year
-                    </div>
-                </div>
-            </div>
-
-            <!-- Keep Option (Green) -->
-            <div class="decision-card card-green">
-                <div class="card-row">
-                    <div class="card-left">
-                        <div class="card-main-text">
-                            KEEP {{ decisionData.keep.area }}ha {{ decisionData.keep.crop | uppercase }}
-                            <span class="sub-financial">
-                                +${{ decisionData.keep.profitPerHa / 1000 }}k/ha × {{ decisionData.keep.area }}
-                            </span>
-                        </div>
-                        <div class="card-detail success-text">
-                            <span class="check-mark">✔</span> Uses your existing skills
-                        </div>
-                    </div>
-                    <div class="card-right financial-positive">
-                        +${{ decisionData.keep.totalProfit / 1000 }}k/year
+                <div class="impact-factors">
+                    <div *ngFor="let factor of yieldImpact.factors" class="factor-item"
+                        [ngClass]="'severity-' + factor.severity">
+                        <i-lucide [img]="AlertTriangleIcon" size="12"></i-lucide>
+                        <span>{{ factor.name }}: -{{ factor.impact.toFixed(0) }}%</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ACTIONS BAR -->
-        <div class="actions-bar">
-            <button class="btn btn-primary-dark">
-                <i-lucide [img]="DropletsIcon" size="16"></i-lucide> IRRIGATE BLOCK NOW
-            </button>
-            <button class="btn btn-secondary-light">
-                <i-lucide [img]="SproutIcon" size="16"></i-lucide> ORDER SHADE CLOTH
-            </button>
-            <button class="btn btn-text" (click)="openGrantModal()">
-                <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> ASSISTANCE GRANT GUIDE
-            </button>
-            <button class="btn btn-text" (click)="downloadPdf()">
-                <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> {{ decisionData.totalArea }}ha FULL PLAN → PDF
-            </button>
-            <div class="spacer"></div>
-            <button class="btn btn-text icon-only">
-                SAVE INSIGHTS
-            </button>
-            <button class="btn btn-text icon-only">
-                SHARE REPORT
-            </button>
+        <!-- Alternative Crops Section -->
+        <div class="alternative-crops-section" *ngIf="alternativeCrops.length > 0">
+            <div class="alternatives-header">
+                <i-lucide [img]="SproutIcon" size="18" class="icon-green"></i-lucide>
+                <span>Better-Suited Alternatives Based on Current Conditions</span>
+            </div>
+            <div class="alternatives-grid">
+                <div *ngFor="let alt of alternativeCrops" class="alternative-card"
+                    (click)="openAlternativeCropModal(alt)">
+                    <div class="alt-header">
+                        <span class="alt-name">{{ alt.cropName }}</span>
+                        <span class="suitability-score"
+                            [ngClass]="alt.suitabilityScore > 80 ? 'excellent' : alt.suitabilityScore > 60 ? 'good' : 'fair'">
+                            {{ alt.suitabilityScore.toFixed(0) }}% Match
+                        </span>
+                    </div>
+                    <div class="alt-details">
+                        <div class="detail-row">
+                            <i-lucide [img]="DropletsIcon" size="12"></i-lucide>
+                            <span>{{ alt.waterRequirement }} ML/ha water</span>
+                        </div>
+                        <div class="detail-row profit">
+                            <i-lucide [img]="CheckCircleIcon" size="12"></i-lucide>
+                            <span>${{ (alt.profitPerHa / 1000).toFixed(0) }}k/ha profit</span>
+                        </div>
+                    </div>
+                    <div class="alt-reasons">
+                        <div *ngFor="let reason of alt.reasons.slice(0, 2)" class="reason-item">
+                            <span class="check-mark-small">✓</span>
+                            <span>{{ reason }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="disclaimer-footer">
-            Data Sources: Live IoT sensors, PIRSA 2025 Factsheet, WGCSA 2024 Crush Report. Demo prototype - consult
-            professional advisors before making decisions.
-        </div>
-
     </div>
 
-    <!-- SENSOR HISTORY MODAL -->
-    <app-modal [isOpen]="isModalOpen" [title]="selectedSensor?.label + ' History'" (close)="closeModal()">
-        <div *ngIf="selectedSensor">
-            <p class="modal-subtitle">Last 5 Hours Trend</p>
-            <div class="modal-chart-wrapper">
-                <app-line-chart [data]="selectedSensor.history" [labels]="selectedSensor.historyLabels" color="#10b981"
-                    [height]="250" [showAxes]="true">
-                </app-line-chart>
-            </div>
-            <div class="modal-stats">
-                <div class="stat-box">
-                    <span class="label">Current</span>
-                    <span class="value">{{ selectedSensor.value }}{{ selectedSensor.unit }}</span>
+    <!-- DECISION SECTION -->
+    <div class="advisor-section card-box decision-section">
+        <div class="section-title">
+            <i-lucide [img]="SproutIcon" size="20" class="icon-green"></i-lucide>
+            <!-- Reference icon appears to be a rising chart, using Sprout or standard icon for now -->
+            YOUR {{ decisionData.totalArea }}ha DECISION
+        </div>
+
+        <!-- Current Status (Red) -->
+        <div class="decision-card card-red">
+            <div class="card-row">
+                <div class="card-left">
+                    <div class="card-main-text">
+                        CURRENT ({{ decisionData.current.crop }})
+                        <span class="sub-financial">
+                            {{ formatCurrency(decisionData.current.lossPerHa) }}/ha × {{ decisionData.totalArea }}
+                        </span>
+                    </div>
+                    <div class="card-detail warning-text">
+                        <span class="x-mark">✕</span> {{ decisionData.current.yieldLossDetails }}
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <span class="label">Average</span>
-                    <span class="value">{{ getAverage(selectedSensor.history) | number:'1.1-1' }}{{ selectedSensor.unit
-                        }}</span>
-                </div>
-                <div class="stat-box">
-                    <span class="label">Max</span>
-                    <span class="value">{{ getMax(selectedSensor.history) }}{{ selectedSensor.unit }}</span>
+                <div class="card-right financial-negative">
+                    {{ formatCurrency(decisionData.current.totalLoss) }}/year
                 </div>
             </div>
         </div>
-    </app-modal>
 
-    <!-- RISK ANALYSIS MODAL -->
-    <app-modal [isOpen]="isRiskModalOpen" [title]="(currentBlock?.crop || 'Crop') + ' Risk Analysis'"
-        (close)="closeRiskModal()">
-        <div class="risk-analysis-content" style="padding: 1rem;">
-            <div class="risk-overview" style="text-align: center; margin-bottom: 2rem;">
-                <div class="risk-gauge">
-                    <div class="gauge-value" style="font-size: 3rem; font-weight: 800;"
-                        [style.color]="advisorData.riskLevel === 'High' ? '#ef4444' : (advisorData.riskLevel === 'Moderate' ? '#f59e0b' : '#10b981')">
-                        {{ advisorData.riskScore }}%
+        <!-- Switch Option (Green) -->
+        <div class="decision-card card-green">
+            <div class="card-row">
+                <div class="card-left">
+                    <div class="card-main-text">
+                        {{ decisionData.switch.area }}ha {{ decisionData.switch.crop | uppercase }} SWITCH
+                        <span class="sub-financial">
+                            {{ formatCurrency(decisionData.switch.profitPerHa) }}/ha × {{ decisionData.switch.area
+                            }}
+                        </span>
                     </div>
-                    <div class="gauge-label" style="font-weight: 700; color: #374151; text-transform: uppercase;">
-                        CURRENT RISK LEVEL: {{ advisorData.riskLevel }}</div>
+                    <div class="card-detail success-text">
+                        <span class="check-mark">✔</span> Fits {{ decisionData.switch.allocationMatch }}% allocation
+                        perfectly
+                    </div>
+                    <div class="card-detail success-text">
+                        <span class="check-mark">✔</span>
+                        <span class="ph-val">{{ sensors[4].value }} pH</span> = PIRSA validated
+                        <span class="check-mark small">✔</span>
+                    </div>
                 </div>
-            </div>
-
-            <div class="analysis-details">
-                <h4
-                    style="margin-bottom: 1.5rem; color: #1e4d3b; border-bottom: 2px solid #ecfdf5; padding-bottom: 0.5rem;">
-                    Detailed Insights</h4>
-                <ul class="explanation-list" style="list-style: none; padding: 0;">
-                    <li *ngFor="let msg of riskExplanations"
-                        style="margin-bottom: 1rem; display: flex; gap: 0.75rem; font-size: 0.95rem; color: #4b5563; align-items: flex-start;">
-                        <i-lucide [img]="AlertTriangleIcon" size="18" class="icon-orange"
-                            *ngIf="msg.includes('outside') || msg.includes('CRITICAL')"></i-lucide>
-                        <i-lucide [img]="CheckCircleIcon" size="18" class="icon-green"
-                            *ngIf="!msg.includes('outside') && !msg.includes('CRITICAL')"></i-lucide>
-                        <span>{{ msg }}</span>
-                    </li>
-                </ul>
+                <div class="card-right financial-positive">
+                    {{ formatCurrency(decisionData.switch.totalProfit) }}/year
+                </div>
             </div>
         </div>
-    </app-modal>
 
-    <!-- GRANT FUNDING MODAL -->
-    <app-modal [isOpen]="isGrantModalOpen" title="" (close)="closeGrantModal()">
-        <div class="grant-modal-content">
-            <div class="grant-header">
-                <div class="grant-icon-wrapper">
-                    <span>🎯</span>
+        <!-- Keep Option (Green) -->
+        <div class="decision-card card-green">
+            <div class="card-row">
+                <div class="card-left">
+                    <div class="card-main-text">
+                        KEEP {{ decisionData.keep.area }}ha {{ decisionData.keep.crop | uppercase }}
+                        <span class="sub-financial">
+                            {{ formatCurrency(decisionData.keep.profitPerHa) }}/ha × {{ decisionData.keep.area }}
+                        </span>
+                    </div>
+                    <div class="card-detail success-text">
+                        <span class="check-mark">✔</span> Uses your existing skills
+                    </div>
                 </div>
-                <h3>SA GRAPE GROWER FUNDING</h3>
-            </div>
-            <p class="grant-subtitle">{{ decisionData.switch.area }}ha of your farm is eligible for assistance</p>
-
-            <div class="grant-cards-container">
-                <!-- Card 1 -->
-                <div class="grant-card">
-                    <div class="grant-card-icon">
-                        <i-lucide [img]="ExternalLinkIcon" size="24" class="icon-blue-light"></i-lucide>
-                    </div>
-                    <div class="grant-card-info">
-                        <h4>SA Assistance Guide for Grape Growers</h4>
-                        <p>April 2025 - Complete funding overview and application process</p>
-                    </div>
-                    <button class="btn-open-pdf"
-                        (click)="openLink('https://www.pir.sa.gov.au/primary_industries/crops_and_pastures/fruit_and_nuts/wine_grapes')">
-                        <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
-                    </button>
+                <div class="card-right financial-positive">
+                    {{ formatCurrency(decisionData.keep.totalProfit) }}/year
                 </div>
-
-                <!-- Card 2 -->
-                <div class="grant-card">
-                    <div class="grant-card-icon">
-                        <i-lucide [img]="ExternalLinkIcon" size="24" class="icon-blue-light"></i-lucide>
-                    </div>
-                    <div class="grant-card-info">
-                        <h4>SA Grape Growers Industry Fund 2025-30</h4>
-                        <p>PIRSA management plan with diversification grants</p>
-                    </div>
-                    <button class="btn-open-pdf" (click)="openLink('https://www.pir.sa.gov.au/grants_and_assistance')">
-                        <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
-                    </button>
-                </div>
-
-                <!-- Card 3 -->
-                <div class="grant-card">
-                    <div class="grant-card-icon">
-                        <i-lucide [img]="SproutIcon" size="24" class="icon-green-light"></i-lucide>
-                    </div>
-                    <div class="grant-card-info">
-                        <h4>PIRSA Vineyard-to-Olive Conversion</h4>
-                        <p>CCW 2025 Factsheet - Technical conversion guide</p>
-                    </div>
-                    <button class="btn-open-pdf" (click)="openLink('https://www.pir.sa.gov.au/')">
-                        <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
-                    </button>
-                </div>
-            </div>
-
-            <div class="grant-footer-alert">
-                <div class="check-icon-wrapper">
-                    <i-lucide [img]="CheckCircleIcon" size="20"></i-lucide>
-                </div>
-                <span>Covers 50% tree planting + diversification grants</span>
             </div>
         </div>
-    </app-modal>
+    </div>
 
-    <!-- Footer Prototype Notice -->
-    <div class="prototype-notice">
-        <div class="notice-icon">i</div>
-        <div class="notice-text">
-            <strong>Prototype Notice</strong><br>
-            This dashboard displays demo sensor data for demonstration purposes. Real IoT integration would connect to
-            physical sensors in your vineyard.
+    <!-- ACTIONS BAR -->
+    <div class="actions-bar">
+        <button class="btn btn-primary-dark">
+            <i-lucide [img]="DropletsIcon" size="16"></i-lucide> IRRIGATE BLOCK NOW
+        </button>
+        <button class="btn btn-secondary-light">
+            <i-lucide [img]="SproutIcon" size="16"></i-lucide> ORDER SHADE CLOTH
+        </button>
+        <button class="btn btn-text" (click)="openGrantModal()">
+            <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> ASSISTANCE GRANT GUIDE
+        </button>
+        <button class="btn btn-text" (click)="downloadPdf()">
+            <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> {{ decisionData.totalArea }}ha FULL PLAN → PDF
+        </button>
+        <div class="spacer"></div>
+        <button class="btn btn-text icon-only">
+            SAVE INSIGHTS
+        </button>
+        <button class="btn btn-text icon-only">
+            SHARE REPORT
+        </button>
+    </div>
+
+    <div class="disclaimer-footer">
+        Data Sources: Live IoT sensors, PIRSA 2025 Factsheet, WGCSA 2024 Crush Report. Demo prototype - consult
+        professional advisors before making decisions.
+    </div>
+
+</div>
+
+<!-- SENSOR HISTORY MODAL -->
+<app-modal [isOpen]="isModalOpen" [title]="selectedSensor?.label + ' History'" (close)="closeModal()">
+    <div *ngIf="selectedSensor">
+        <p class="modal-subtitle">Last 5 Hours Trend</p>
+        <div class="modal-chart-wrapper">
+            <app-line-chart [data]="selectedSensor.history" [labels]="selectedSensor.historyLabels" color="#10b981"
+                [height]="250" [showAxes]="true">
+            </app-line-chart>
         </div>
+        <div class="modal-stats">
+            <div class="stat-box">
+                <span class="label">Current</span>
+                <span class="value">{{ selectedSensor.value }}{{ selectedSensor.unit }}</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Average</span>
+                <span class="value">{{ getAverage(selectedSensor.history) | number:'1.1-1' }}{{ selectedSensor.unit
+                    }}</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Max</span>
+                <span class="value">{{ getMax(selectedSensor.history) }}{{ selectedSensor.unit }}</span>
+            </div>
+        </div>
+    </div>
+</app-modal>
+
+<!-- RISK ANALYSIS MODAL -->
+<app-modal [isOpen]="isRiskModalOpen" [title]="(currentBlock?.crop || 'Crop') + ' Risk Analysis'"
+    (close)="closeRiskModal()">
+    <div class="risk-analysis-content" style="padding: 1rem;">
+        <div class="risk-overview" style="text-align: center; margin-bottom: 2rem;">
+            <div class="risk-gauge">
+                <div class="gauge-value" style="font-size: 3rem; font-weight: 800;"
+                    [style.color]="advisorData.riskLevel === 'High' ? '#ef4444' : (advisorData.riskLevel === 'Moderate' ? '#f59e0b' : '#10b981')">
+                    {{ advisorData.riskScore }}%
+                </div>
+                <div class="gauge-label" style="font-weight: 700; color: #374151; text-transform: uppercase;">
+                    CURRENT RISK LEVEL: {{ advisorData.riskLevel }}</div>
+            </div>
+        </div>
+
+        <div class="analysis-details">
+            <h4
+                style="margin-bottom: 1.5rem; color: #1e4d3b; border-bottom: 2px solid #ecfdf5; padding-bottom: 0.5rem;">
+                Detailed Insights</h4>
+            <ul class="explanation-list" style="list-style: none; padding: 0;">
+                <li *ngFor="let msg of riskExplanations"
+                    style="margin-bottom: 1rem; display: flex; gap: 0.75rem; font-size: 0.95rem; color: #4b5563; align-items: flex-start;">
+                    <i-lucide [img]="AlertTriangleIcon" size="18" class="icon-orange"
+                        *ngIf="msg.includes('outside') || msg.includes('CRITICAL')"></i-lucide>
+                    <i-lucide [img]="CheckCircleIcon" size="18" class="icon-green"
+                        *ngIf="!msg.includes('outside') && !msg.includes('CRITICAL')"></i-lucide>
+                    <span>{{ msg }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</app-modal>
+
+<!-- GRANT FUNDING MODAL -->
+<app-modal [isOpen]="isGrantModalOpen" title="" (close)="closeGrantModal()">
+    <div class="grant-modal-content">
+        <div class="grant-header">
+            <div class="grant-icon-wrapper">
+                <span>🎯</span>
+            </div>
+            <h3>SA GRAPE GROWER FUNDING</h3>
+        </div>
+        <p class="grant-subtitle">{{ decisionData.switch.area }}ha of your farm is eligible for assistance</p>
+
+        <div class="grant-cards-container">
+            <!-- Card 1 -->
+            <div class="grant-card">
+                <div class="grant-card-icon">
+                    <i-lucide [img]="ExternalLinkIcon" size="24" class="icon-blue-light"></i-lucide>
+                </div>
+                <div class="grant-card-info">
+                    <h4>SA Assistance Guide for Grape Growers</h4>
+                    <p>April 2025 - Complete funding overview and application process</p>
+                </div>
+                <button class="btn-open-pdf"
+                    (click)="openLink('https://www.pir.sa.gov.au/primary_industries/crops_and_pastures/fruit_and_nuts/wine_grapes')">
+                    <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
+                </button>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="grant-card">
+                <div class="grant-card-icon">
+                    <i-lucide [img]="ExternalLinkIcon" size="24" class="icon-blue-light"></i-lucide>
+                </div>
+                <div class="grant-card-info">
+                    <h4>SA Grape Growers Industry Fund 2025-30</h4>
+                    <p>PIRSA management plan with diversification grants</p>
+                </div>
+                <button class="btn-open-pdf" (click)="openLink('https://www.pir.sa.gov.au/grants_and_assistance')">
+                    <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
+                </button>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="grant-card">
+                <div class="grant-card-icon">
+                    <i-lucide [img]="SproutIcon" size="24" class="icon-green-light"></i-lucide>
+                </div>
+                <div class="grant-card-info">
+                    <h4>PIRSA Vineyard-to-Olive Conversion</h4>
+                    <p>CCW 2025 Factsheet - Technical conversion guide</p>
+                </div>
+                <button class="btn-open-pdf" (click)="openLink('https://www.pir.sa.gov.au/')">
+                    <i-lucide [img]="ExternalLinkIcon" size="14"></i-lucide> OPEN PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="grant-footer-alert">
+            <div class="check-icon-wrapper">
+                <i-lucide [img]="CheckCircleIcon" size="20"></i-lucide>
+            </div>
+            <span>Covers 50% tree planting + diversification grants</span>
+        </div>
+    </div>
+</app-modal>
+
+<!-- Footer Prototype Notice -->
+<div class="prototype-notice">
+    <div class="notice-icon">i</div>
+    <div class="notice-text">
+        <strong>Prototype Notice</strong><br>
+        This dashboard displays demo sensor data for demonstration purposes. Real IoT integration would connect to
+        physical sensors in your vineyard.
     </div>
 </div>
+
+<!-- Alternative Crop Detail Modal -->
+<app-modal [isOpen]="isAlternativeCropModalOpen"
+    [title]="selectedAlternativeCrop ? selectedAlternativeCrop.cropName + ' - Detailed Analysis' : 'Crop Analysis'"
+    (close)="closeAlternativeCropModal()">
+    <div class="alt-crop-modal-content" *ngIf="selectedAlternativeCrop">
+        <!-- Suitability Score Header -->
+        <div class="alt-modal-header">
+            <div class="suitability-badge-large"
+                [ngClass]="selectedAlternativeCrop.suitabilityScore > 80 ? 'excellent' : selectedAlternativeCrop.suitabilityScore > 60 ? 'good' : 'fair'">
+                <div class="score-number">{{ selectedAlternativeCrop.suitabilityScore.toFixed(0) }}%</div>
+                <div class="score-label">SUITABILITY MATCH</div>
+            </div>
+            <div class="ph-compatibility-badge"
+                [ngClass]="selectedAlternativeCrop.phCompatible ? 'compatible' : 'incompatible'">
+                <i-lucide [img]="selectedAlternativeCrop.phCompatible ? CheckCircleIcon : AlertTriangleIcon"
+                    size="16"></i-lucide>
+                <span>{{ selectedAlternativeCrop.phCompatible ? 'pH Compatible' : 'pH Adjustment Needed' }}</span>
+            </div>
+        </div>
+
+        <!-- Key Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon water">
+                    <i-lucide [img]="DropletsIcon" size="24"></i-lucide>
+                </div>
+                <div class="metric-info">
+                    <div class="metric-label">Water Requirement</div>
+                    <div class="metric-value">{{ selectedAlternativeCrop.waterRequirement }} ML/ha</div>
+                    <div class="metric-comparison" *ngIf="currentBlock">
+                        <span class="comparison-label">vs Current:</span>
+                        <span [ngClass]="selectedAlternativeCrop.waterRequirement < 6.5 ? 'better' : 'worse'">
+                            {{ selectedAlternativeCrop.waterRequirement < 6.5 ? '↓ More Efficient' : '↑ More Water' }}
+                                </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon profit">
+                    <i-lucide [img]="CheckCircleIcon" size="24"></i-lucide>
+                </div>
+                <div class="metric-info">
+                    <div class="metric-label">Profit Potential</div>
+                    <div class="metric-value">{{ formatCurrency(selectedAlternativeCrop.profitPerHa) }}/ha</div>
+                    <div class="metric-comparison" *ngIf="currentBlock && decisionData.totalArea">
+                        <span class="comparison-label">Total for {{ decisionData.totalArea }}ha:</span>
+                        <span class="total-profit">{{ formatCurrency(selectedAlternativeCrop.profitPerHa *
+                            decisionData.totalArea) }}/year</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Why This Crop Section -->
+        <div class="reasons-section">
+            <h3 class="section-title">
+                <i-lucide [img]="SproutIcon" size="18"></i-lucide>
+                Why {{ selectedAlternativeCrop.cropName }}?
+            </h3>
+            <div class="reasons-list">
+                <div *ngFor="let reason of selectedAlternativeCrop.reasons" class="reason-item-detailed">
+                    <div class="reason-check">
+                        <i-lucide [img]="CheckCircleIcon" size="16"></i-lucide>
+                    </div>
+                    <span>{{ reason }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Conditions Match -->
+        <div class="conditions-match-section">
+            <h3 class="section-title">
+                <i-lucide [img]="ThermometerIcon" size="18"></i-lucide>
+                Current Conditions Analysis
+            </h3>
+            <div class="conditions-grid">
+                <div class="condition-item" *ngIf="sensors.length > 0">
+                    <div class="condition-label">
+                        <i-lucide [img]="DropletsIcon" size="14"></i-lucide>
+                        Soil Moisture
+                    </div>
+                    <div class="condition-value">
+                        {{ getSensorValue('Soil Moisture') }}%
+                    </div>
+                    <div class="condition-status good">
+                        <i-lucide [img]="CheckCircleIcon" size="12"></i-lucide>
+                        Optimal
+                    </div>
+                </div>
+
+                <div class="condition-item">
+                    <div class="condition-label">
+                        <i-lucide [img]="SproutIcon" size="14"></i-lucide>
+                        Soil pH
+                    </div>
+                    <div class="condition-value">
+                        {{ getSensorValue('pH Level') }}
+                    </div>
+                    <div class="condition-status" [ngClass]="selectedAlternativeCrop.phCompatible ? 'good' : 'warning'">
+                        <i-lucide [img]="selectedAlternativeCrop.phCompatible ? CheckCircleIcon : AlertTriangleIcon"
+                            size="12"></i-lucide>
+                        {{ selectedAlternativeCrop.phCompatible ? 'Compatible' : 'Needs Adjustment' }}
+                    </div>
+                </div>
+
+                <div class="condition-item">
+                    <div class="condition-label">
+                        <i-lucide [img]="ThermometerIcon" size="14"></i-lucide>
+                        Temperature
+                    </div>
+                    <div class="condition-value">
+                        {{ getSensorValue('Air Temperature') }}°C
+                    </div>
+                    <div class="condition-status good">
+                        <i-lucide [img]="CheckCircleIcon" size="12"></i-lucide>
+                        Suitable
+                    </div>
+                </div>
+
+                <div class="condition-item">
+                    <div class="condition-label">
+                        <i-lucide [img]="WindIcon" size="14"></i-lucide>
+                        Humidity
+                    </div>
+                    <div class="condition-value">
+                        {{ getSensorValue('Humidity') }}%
+                    </div>
+                    <div class="condition-status good">
+                        <i-lucide [img]="CheckCircleIcon" size="12"></i-lucide>
+                        Optimal
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="alt-modal-actions">
+            <button class="btn btn-primary-dark" (click)="closeAlternativeCropModal()">
+                <i-lucide [img]="CheckCircleIcon" size="16"></i-lucide>
+                Consider This Option
+            </button>
+            <button class="btn btn-secondary-light" (click)="openGrantModal(); closeAlternativeCropModal()">
+                <i-lucide [img]="ExternalLinkIcon" size="16"></i-lucide>
+                View Conversion Grants
+            </button>
+        </div>
+    </div>
+</app-modal>

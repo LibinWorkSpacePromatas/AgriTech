@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { LucideAngularModule, X } from 'lucide-angular';
 
 @Component({
-    selector: 'app-modal',
-    standalone: true,
-    imports: [CommonModule, LucideAngularModule],
-    template: `
+  selector: 'app-modal',
+  standalone: true,
+  imports: [CommonModule, LucideAngularModule],
+  template: `
     <div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
       <div class="modal-content fade-in-up">
         <div class="modal-header">
@@ -21,7 +21,7 @@ import { LucideAngularModule, X } from 'lucide-angular';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .modal-backdrop {
       position: fixed;
       top: 0;
@@ -82,6 +82,36 @@ import { LucideAngularModule, X } from 'lucide-angular';
 
     .modal-body {
       padding: 1.5rem;
+      max-height: 70vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    /* Premium Custom Scrollbar */
+    .modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+      border-radius: 10px;
+      transition: background 0.3s ease;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    }
+
+    /* Firefox Scrollbar */
+    .modal-body {
+      scrollbar-width: thin;
+      scrollbar-color: #3b82f6 #f1f5f9;
     }
 
     @keyframes fadeInUp {
@@ -97,15 +127,15 @@ import { LucideAngularModule, X } from 'lucide-angular';
   `]
 })
 export class ModalComponent {
-    @Input() isOpen: boolean = false;
-    @Input() title: string = '';
-    @Output() close = new EventEmitter<void>();
+  @Input() isOpen: boolean = false;
+  @Input() title: string = '';
+  @Output() close = new EventEmitter<void>();
 
-    XIcon = X;
+  XIcon = X;
 
-    onBackdropClick(event: MouseEvent) {
-        if ((event.target as HTMLElement).classList.contains('modal-backdrop')) {
-            this.close.emit();
-        }
+  onBackdropClick(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('modal-backdrop')) {
+      this.close.emit();
     }
+  }
 }

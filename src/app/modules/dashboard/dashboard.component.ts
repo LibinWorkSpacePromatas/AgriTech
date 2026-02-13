@@ -10,6 +10,7 @@ import { User as AppUser } from '../../core/models/user.model';
 import { BlockService } from '../../shared/services/block.service';
 import { MOCK_BLOCKS } from '../../shared/constants';
 import { Block as SharedBlock } from '../../shared/models';
+import { CropAdvisorService, ActionItem, CropRecommendation, YieldImpact } from '../../core/services/crop-advisor.service';
 
 interface Sensor {
   id: string;
@@ -89,7 +90,7 @@ const CROP_PROFILES: Record<string, any> = {
   standalone: true,
   imports: [CommonModule, LucideAngularModule, LineChartComponent, ModalComponent],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  styleUrls: ['./dashboard.component.css', './dashboard-premium.component.css', './dashboard-alt-modal.component.css', './dashboard-action-cards.component.css']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   CpuIcon = Cpu;
@@ -192,17 +193,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         colorClass: 'good'
       }
     ],
-    actions: [
-      {
-        priority: 3,
-        label: 'NEXT 7 DAYS',
-        items: [
-          'Monitor soil levels closely',
-          'Optimize irrigation based on moisture'
-        ]
-      }
-    ]
+    actions: [] as ActionItem[]
   };
+
+  // Alternative crop recommendations
+  alternativeCrops: CropRecommendation[] = [];
+  yieldImpact: YieldImpact | null = null;
 
   // Decision Section Data
   decisionData = {
@@ -232,6 +228,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isRiskModalOpen: boolean = false;
   riskExplanations: string[] = [];
 
+  // Alternative crop modal
+  isAlternativeCropModalOpen: boolean = false;
+  selectedAlternativeCrop: CropRecommendation | null = null;
+
   selectedSensor: Sensor | null = null;
   isModalOpen: boolean = false;
   chartMode: 'hourly' | 'daily' = 'hourly';
@@ -245,7 +245,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     public weatherService: WeatherService,
     private authService: AuthService,
-    private blockService: BlockService
+    private blockService: BlockService,
+    private cropAdvisorService: CropAdvisorService
   ) { }
 
   ngOnInit(): void {
@@ -406,6 +407,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const moisture = this.sensors.find(s => s.label === 'Soil Moisture');
     const ph = this.sensors.find(s => s.label === 'pH Level');
     const airTemp = this.sensors.find(s => s.label === 'Air Temperature');
+    const soilTemp = this.sensors.find(s => s.label === 'Soil Temperature');
     const humidity = this.sensors.find(s => s.label === 'Humidity');
 
     if (moisture) {
@@ -436,6 +438,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // 3. Calculate Risk Score
     this.calculateRiskStatus();
+
+    // 4. Generate dynamic recommendations using CropAdvisorService
+    if (this.currentBlock && moisture && ph && airTemp && soilTemp && humidity) {
+      const sensorData = {
+        moisture: Number(moisture.value),
+        ph: Number(ph.value),
+        airTemp: Number(airTemp.value),
+        soilTemp: Number(soilTemp.value),
+        humidity: Number(humidity.value)
+      };
+
+      // Generate action recommendations
+      this.advisorData.actions = this.cropAdvisorService.generateRecommendations(
+        sensorData,
+        this.currentBlock.crop
+      );
+
+      // Calculate yield impact
+      this.yieldImpact = this.cropAdvisorService.calculateYieldImpact(
+        sensorData,
+        this.currentBlock.crop,
+        this.currentBlock.area
+      );
+
+      // Get alternative crop recommendations
+      this.alternativeCrops = this.cropAdvisorService.recommendAlternativeCrops(
+        sensorData,
+        this.currentBlock.crop
+      );
+    }
   }
 
   evaluateParameter(analysis: any, type: string, value: number) {
@@ -505,48 +537,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.decisionData.totalArea = this.currentBlock.area;
     this.decisionData.current.crop = this.currentBlock.crop;
 
-    // 1. Calculate Current Loss based on Moisture
-    // Logic: If moisture is low (< 35%), yield loss increases linearly
-    const moistureObj = this.sensors.find(s => s.label === 'Soil Moisture');
-    const moisture = moistureObj ? Number(moistureObj.value) : 32; // Default to 32 if missing
+    // Use yield impact from CropAdvisorService if available
+    if (this.yieldImpact) {
+      const yieldLossPercent = 100 - this.yieldImpact.currentYieldPercent;
+      const moisture = this.sensors.find(s => s.label === 'Soil Moisture')?.value as number || 32;
 
-    // Mock logic: 32% moisture = 45% yield loss (Reference)
-    // Formula: Loss % = (Optimal Low - Current) * Factor?
-    // Let's simplified mock: Base loss 10%, plus 2% for every 1% below 40%
-    let yieldLossPercent = 0;
-    if (moisture < 40) {
-      yieldLossPercent = Math.min(100, 10 + (40 - moisture) * 2.5);
+      this.decisionData.current.yieldLossDetails = `${moisture.toFixed(0)}% moisture = ${yieldLossPercent.toFixed(0)}% yield loss confirmed`;
+
+      // Calculate loss based on yield impact
+      const baseProfitPerHa = this.cropAdvisorService.getCropProfile(this.currentBlock.crop)?.profitPerHa || 12000;
+      this.decisionData.current.lossPerHa = -(baseProfitPerHa * (yieldLossPercent / 100));
+      this.decisionData.current.totalLoss = this.decisionData.current.lossPerHa * this.currentBlock.area;
+    } else {
+      // Fallback to original logic
+      const moistureObj = this.sensors.find(s => s.label === 'Soil Moisture');
+      const moisture = moistureObj ? Number(moistureObj.value) : 32;
+
+      let yieldLossPercent = 0;
+      if (moisture < 40) {
+        yieldLossPercent = Math.min(100, 10 + (40 - moisture) * 2.5);
+      }
+
+      this.decisionData.current.yieldLossDetails = `${moisture.toFixed(0)}% moisture = ${yieldLossPercent.toFixed(0)}% yield loss confirmed`;
+      this.decisionData.current.totalLoss = this.decisionData.current.lossPerHa * this.currentBlock.area;
     }
 
-    // Formatting: "32% moisture = 45% yield loss confirmed"
-    this.decisionData.current.yieldLossDetails = `${moisture.toFixed(0)}% moisture = ${yieldLossPercent.toFixed(0)}% yield loss confirmed`;
+    // Use alternative crop recommendations for switch option
+    if (this.alternativeCrops.length > 0) {
+      const topAlternative = this.alternativeCrops[0];
+      const switchArea = Math.round(this.currentBlock.area * 0.7);
+      const keepArea = this.currentBlock.area - switchArea;
 
-    // Financials
-    const totalCurrentLoss = this.decisionData.current.lossPerHa * this.currentBlock.area; // -$2k * 10 = -20k (Reference says -18k, close enough)
-    // Adjust based on yield loss? 
-    // Reference: "-$2k/ha x 10 ... -$18k/year"
-    // Let's use specific calculation: Base -2000 + (YieldLoss% * -100?)
-    // Let's stick to simple mock values that react slightly
-    this.decisionData.current.totalLoss = this.decisionData.current.lossPerHa * this.currentBlock.area;
+      this.decisionData.switch.crop = topAlternative.cropName;
+      this.decisionData.switch.area = switchArea;
+      this.decisionData.switch.profitPerHa = topAlternative.profitPerHa;
+      this.decisionData.switch.totalProfit = topAlternative.profitPerHa * switchArea;
+      this.decisionData.switch.allocationMatch = Math.round(topAlternative.suitabilityScore);
+      this.decisionData.switch.phValidated = topAlternative.phCompatible;
 
+      // Keep option with premium grapes
+      this.decisionData.keep.area = keepArea;
+      this.decisionData.keep.totalProfit = this.decisionData.keep.profitPerHa * keepArea;
+    } else {
+      // Fallback to default Olives recommendation
+      const switchArea = Math.round(this.currentBlock.area * 0.7);
+      const keepArea = this.currentBlock.area - switchArea;
 
-    // 2. Switch Option (Olives)
-    // Split 70% Switch, 30% Keep
-    const switchArea = Math.round(this.currentBlock.area * 0.7);
-    const keepArea = this.currentBlock.area - switchArea;
+      this.decisionData.switch.area = switchArea;
+      this.decisionData.switch.totalProfit = this.decisionData.switch.profitPerHa * switchArea;
 
-    this.decisionData.switch.area = switchArea;
-    this.decisionData.switch.totalProfit = this.decisionData.switch.profitPerHa * switchArea;
+      const phObj = this.sensors.find(s => s.label === 'pH Level');
+      const ph = phObj ? Number(phObj.value) : 7.5;
+      this.decisionData.switch.phValidated = (ph >= 6.0 && ph <= 8.5);
 
-    // pH Validation
-    const phObj = this.sensors.find(s => s.label === 'pH Level');
-    const ph = phObj ? Number(phObj.value) : 7.5;
-    this.decisionData.switch.phValidated = (ph >= 6.0 && ph <= 8.5); // Olive friendly
-
-
-    // 3. Keep Option (Premium Grapes)
-    this.decisionData.keep.area = keepArea;
-    this.decisionData.keep.totalProfit = this.decisionData.keep.profitPerHa * keepArea;
+      this.decisionData.keep.area = keepArea;
+      this.decisionData.keep.totalProfit = this.decisionData.keep.profitPerHa * keepArea;
+    }
   }
 
   openRiskModal() {
@@ -555,6 +601,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   closeRiskModal() {
     this.isRiskModalOpen = false;
+  }
+
+  openAlternativeCropModal(crop: CropRecommendation) {
+    this.selectedAlternativeCrop = crop;
+    this.isAlternativeCropModalOpen = true;
+  }
+
+  closeAlternativeCropModal() {
+    this.isAlternativeCropModalOpen = false;
+    this.selectedAlternativeCrop = null;
+  }
+
+  // Helper method to format currency values without excessive decimals
+  formatCurrency(value: number): string {
+    const absValue = Math.abs(value);
+    if (absValue >= 1000000) {
+      return `$${(value / 1000000).toFixed(1)}M`;
+    } else if (absValue >= 1000) {
+      const kValue = value / 1000;
+      // Round to 1 decimal place
+      return `$${kValue.toFixed(1)}k`;
+    } else {
+      return `$${Math.round(value)}`;
+    }
+  }
+
+  // Helper method to get sensor value by label
+  getSensorValue(label: string): number | string {
+    const sensor = this.sensors.find(s => s.label === label);
+    return sensor?.value ?? 'N/A';
   }
 
   // Grant Guide Modal

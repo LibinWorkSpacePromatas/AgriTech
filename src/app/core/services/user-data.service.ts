@@ -16,8 +16,8 @@ export class UserDataService {
             primaryCropName: 'Shiraz',
             primarySoilType: 'Loamy',
             blocks: [
-                { lanslu: 'BCPKFB', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Loamy sand over red clay', area: 8.5, crop: 'Shiraz' },
-                { lanslu: 'BCPKFA', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Sandy loam over red clay', area: 6.2, crop: 'Cabernet Sauvignon' }
+                { lanslu: 'BCPKFB', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Loamy sand over red clay', area: 9, crop: 'Shiraz' },
+                { lanslu: 'BCPKFA', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Sandy loam over red clay', area: 6, crop: 'Cabernet Sauvignon' }
             ]
         },
         {
@@ -30,8 +30,8 @@ export class UserDataService {
             primaryCropName: 'Grenache',
             primarySoilType: 'Clay',
             blocks: [
-                { lanslu: 'WOGJLp', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Loam over red clay', area: 9.1, crop: 'Grenache' },
-                { lanslu: 'BCPKKE', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Gradational sandy loam', area: 7.8, crop: 'Shiraz' }
+                { lanslu: 'WOGJLp', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Loam over red clay', area: 9, crop: 'Grenache' },
+                { lanslu: 'BCPKKE', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Gradational sandy loam', area: 8, crop: 'Shiraz' }
             ]
         },
         {
@@ -44,8 +44,8 @@ export class UserDataService {
             primaryCropName: 'Cabernet Sauvignon',
             primarySoilType: 'Sandy',
             blocks: [
-                { lanslu: 'EUVKFU', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Sand over clay', area: 7.5, crop: 'Cabernet Sauvignon' },
-                { lanslu: 'EUVJLU', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Hard loam over red clay', area: 8.9, crop: 'Merlot' }
+                { lanslu: 'EUVKFU', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Sand over clay', area: 8, crop: 'Cabernet Sauvignon' },
+                { lanslu: 'EUVJLU', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Hard loam over red clay', area: 9, crop: 'Merlot' }
             ]
         },
         {
@@ -58,8 +58,8 @@ export class UserDataService {
             primaryCropName: 'Chardonnay',
             primarySoilType: 'Loamy',
             blocks: [
-                { lanslu: 'EUVJLU', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Loam over red clay', area: 6.8, crop: 'Chardonnay' },
-                { lanslu: 'EUVJLp', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Gradational clay loam', area: 9.5, crop: 'Pinot Grigio' }
+                { lanslu: 'EUVJLU', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Loam over red clay', area: 7, crop: 'Chardonnay' },
+                { lanslu: 'EUVJLp', soilSubgroup: 'D4', primarySoilClass: 'D4', description: 'Gradational clay loam', area: 10, crop: 'Pinot Grigio' }
             ]
         },
         {
@@ -72,8 +72,8 @@ export class UserDataService {
             primaryCropName: 'Riesling',
             primarySoilType: 'Silty',
             blocks: [
-                { lanslu: 'BCPKFI', soilSubgroup: 'A4', primarySoilClass: 'A4', description: 'Silty loam over clay', area: 7.2, crop: 'Riesling' },
-                { lanslu: 'EUVKFB', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Fine sandy loam', area: 8.1, crop: 'Semillon' }
+                { lanslu: 'BCPKFI', soilSubgroup: 'A4', primarySoilClass: 'A4', description: 'Silty loam over clay', area: 7, crop: 'Riesling' },
+                { lanslu: 'EUVKFB', soilSubgroup: 'A6', primarySoilClass: 'A6', description: 'Fine sandy loam', area: 8, crop: 'Semillon' }
             ]
         }
     ];

@@ -93,36 +93,45 @@
 /* Tabs */
 .tabs-nav {
     display: flex;
-    gap: 1rem;
-    padding: 0.25rem;
+    gap: 0.75rem;
+    padding: 0.5rem;
     margin-bottom: 2rem;
+    background: #f3f4f6;
+    border-radius: 12px;
+    display: inline-flex;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .tab-btn {
     background: white;
-    border: 1px solid var(--gray-300);
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    color: var(--gray-600);
-    border-radius: var(--radius-md);
+    border: 2px solid #d1d5db;
+    padding: 0.625rem 1.25rem;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    color: #374151;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: var(--shadow-sm);
-    flex: 1;
-    max-width: 200px;
-    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
 }
 
 .tab-btn:hover {
-    border-color: var(--gray-400);
-    background: var(--gray-50);
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #1f2937;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .tab-btn.active {
     background: #1e4d3b;
     color: white;
-    border-color: #1e4d3b;
-    box-shadow: var(--shadow-md);
+    border: 2px solid #1e4d3b;
+    box-shadow: 0 2px 4px rgba(30, 77, 59, 0.3);
 }
 
 /* Sensor Grid */
@@ -444,24 +453,44 @@
 .advisor-header-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-wrap: nowrap;
+    gap: 2rem;
 }
 
 .advisor-breadcrumbs {
     font-size: 0.875rem;
     color: var(--gray-500);
+    flex: 1;
 }
 
-.refresh-timer {
-    font-weight: 700;
+.refresh-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
     color: #065f46;
-    background: #d1fae5;
-    padding: 2px 6px;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    padding: 3px 8px;
+    border-radius: 6px;
     margin-left: 4px;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+}
+
+.refresh-spinner {
+    animation: rotate-smooth 2s linear infinite;
+    color: #059669;
+}
+
+@keyframes rotate-smooth {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .advisor-breadcrumbs span {
@@ -485,10 +514,11 @@
     font-size: 0.75rem;
 }
 
-.risk-score-badge {
+.risk-score-container {
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-shrink: 0;
 }
 
 .score-label {
@@ -777,7 +807,7 @@
         margin: 0;
     }
 
-    .risk-score-badge {
+    .risk-score-container {
         width: 100%;
         justify-content: space-between;
         background: var(--gray-50);
@@ -889,10 +919,30 @@
 /* ACTIONS BAR */
 .actions-bar {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
+    justify-content: space-between;
     align-items: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.primary-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.secondary-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
 }
 
 .btn {
@@ -901,6 +951,25 @@
     font-family: inherit;
     position: relative;
     overflow: hidden;
+    white-space: nowrap;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .btn:active {
@@ -908,77 +977,72 @@
 }
 
 .btn-primary-dark {
-    background-color: #1e4d3b;
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(135deg, #1e4d3b 0%, #143328 100%);
     color: white;
-    border: 1px solid transparent;
-    padding: 0.65rem 1.15rem;
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 0.9rem;
+    border-radius: 7px;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    gap: 0.4rem;
+    box-shadow: 0 4px 12px rgba(30, 77, 59, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     letter-spacing: 0.01em;
 }
 
 .btn-primary-dark:hover {
-    background-color: #143328;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 77, 59, 0.25);
+    background: linear-gradient(135deg, #143328 0%, #0f2620 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(30, 77, 59, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .btn-secondary-light {
-    background-color: #ffffff;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
     color: #374151;
     border: 1px solid #d1d5db;
-    padding: 0.65rem 1.15rem;
-    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    border-radius: 7px;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    gap: 0.4rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .btn-secondary-light:hover {
-    background-color: #f9fafb;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
     border-color: #9ca3af;
     color: #111827;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 .btn-text {
     background: #ffffff;
     border: 1px solid #e5e7eb;
     color: #4b5563;
-    padding: 0.65rem 1rem;
-    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 7px;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.6875rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    gap: 0.35rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .btn-text:hover {
-    background-color: #fcfcfc;
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
     border-color: #d1d5db;
     color: #111827;
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .icon-only {
-    padding: 0.65rem 1rem;
-    /* Adjust if needed for icon vs text */
-    /* If they are truly icon only in design but have text, text should stay. 
-       If logic requires icon-only style behavior: */
+    padding: 0.7rem 1.25rem;
     justify-content: center;
 }
 
@@ -1010,15 +1074,18 @@
     .actions-bar {
         flex-direction: column;
         align-items: stretch;
+        gap: 1rem;
+    }
+
+    .primary-actions,
+    .secondary-actions {
+        flex-direction: column;
+        width: 100%;
     }
 
     .actions-bar .btn {
         justify-content: center;
         width: 100%;
-    }
-
-    .spacer {
-        display: none;
     }
 }
 
@@ -1197,4 +1264,39 @@
         background: #fff;
         margin-top: 0.5rem;
     }
+}
+
+/* Icon-Only Button Styles */
+.btn-icon-only {
+    padding: 0.65rem;
+    min-width: 38px;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.btn-icon-only:hover {
+    transform: translateY(-2px) scale(1.05);
+}
+
+.btn-primary-dark.btn-icon-only {
+    padding: 0.7rem;
+    min-width: 42px;
+    min-height: 42px;
+}
+
+.btn-primary-dark.btn-icon-only:hover {
+    transform: translateY(-3px) scale(1.08);
+}
+
+.btn-secondary-light.btn-icon-only {
+    padding: 0.7rem;
+    min-width: 42px;
+    min-height: 42px;
+}
+
+.btn-secondary-light.btn-icon-only:hover {
+    transform: translateY(-3px) scale(1.08);
 }

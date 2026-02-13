@@ -32,17 +32,20 @@ export interface WeatherData {
     providedIn: 'root'
 })
 export class WeatherService {
-    // Berri, SA coordinates
-    private readonly LAT = -34.28;
-    private readonly LON = 140.60;
     private readonly API_URL = 'https://api.open-meteo.com/v1/forecast';
 
     constructor(private http: HttpClient) { }
 
-    getWeatherForecast(): Observable<WeatherData> {
+    getWeatherForecast(lat?: number, lon?: number): Observable<WeatherData> {
+        // Default to Berri, SA if no coordinates provided
+        const latitude = lat ?? -34.28;
+        const longitude = lon ?? 140.60;
+
+        console.log('🌍 WeatherService: Fetching weather for coordinates:', { latitude, longitude });
+
         const params = [
-            `latitude=${this.LAT}`,
-            `longitude=${this.LON}`,
+            `latitude=${latitude}`,
+            `longitude=${longitude}`,
             'current=temperature_2m,is_day,rain,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,cloud_cover',
             'hourly=temperature_2m,relative_humidity_2m,rain,cloud_cover,wind_speed_10m',
             'daily=temperature_2m_max,temperature_2m_min',
@@ -50,7 +53,10 @@ export class WeatherService {
             'forecast_days=8'
         ].join('&');
 
-        return this.http.get<any>(`${this.API_URL}?${params}`).pipe(
+        const fullUrl = `${this.API_URL}?${params}`;
+        console.log('📡 API URL:', fullUrl);
+
+        return this.http.get<any>(fullUrl).pipe(
             map(response => ({
                 current: {
                     temperature: response.current.temperature_2m,

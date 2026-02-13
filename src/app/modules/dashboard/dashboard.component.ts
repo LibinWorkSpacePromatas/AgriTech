@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { WeatherService, WeatherData } from '../../core/services/weather.service';
 import { LineChartComponent, ChartSeries } from '../../shared/components/line-chart.component';
 import { ModalComponent } from '../../shared/components/modal.component';
-import { LucideAngularModule, Droplets, Thermometer, Wind, Sprout, CloudRain, ExternalLink, RefreshCw, CheckCircle, AlertTriangle, Zap, Cpu, Layers, Grape } from 'lucide-angular';
+import { LucideAngularModule, Droplets, Thermometer, Wind, Sprout, CloudRain, ExternalLink, RefreshCw, CheckCircle, AlertTriangle, Zap, Cpu, Layers, Grape, FileText, Save, Share2, Download, Leaf } from 'lucide-angular';
 import { Subscription, interval, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { User as AppUser } from '../../core/models/user.model';
@@ -106,6 +106,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ZapIcon = Zap;
   LayersIcon = Layers;
   GrapeIcon = Grape;
+  FileTextIcon = FileText;
+  SaveIcon = Save;
+  Share2Icon = Share2;
+  DownloadIcon = Download;
+  LeafIcon = Leaf;
 
   private destroy$ = new Subject<void>();
 
@@ -255,6 +260,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(sharedBlock => {
         if (sharedBlock) {
+          console.log('📦 Block selected from service:', {
+            name: sharedBlock.name,
+            location: sharedBlock.location,
+            lat: sharedBlock.lat,
+            lon: sharedBlock.lon
+          });
+
           // Map shared block to local dashboard block structure
           this.currentBlock = {
             ...sharedBlock,
@@ -268,9 +280,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
             }
           } as Block;
 
+          console.log('🎯 Current block after mapping:', {
+            name: this.currentBlock.name,
+            location: this.currentBlock.location
+          });
+
+          this.refreshWeather(); // Refresh weather for new block location
           this.updateAdvisorData();
         }
       });
+
+    // Initialize Adelaide time immediately
+    this.updateAdelaideTime();
 
     // Subscribe to active user changes
     this.authSubscription = this.authService.getActiveUser().subscribe(appUser => {
@@ -295,6 +316,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (this.nextRefreshSeconds > 0) {
         this.nextRefreshSeconds--;
       }
+      // Update Adelaide time every second for live clock
+      this.updateAdelaideTime();
     });
   }
 
@@ -390,10 +413,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateAdvisorData() {
-    // 1. Update timestamp
+  updateAdelaideTime() {
+    // Get current UTC time
     const now = new Date();
-    this.advisorData.lastUpdated = now.toLocaleString('en-US', {
+
+    // Adelaide is UTC+10:30 (ACDT during daylight saving, roughly Oct-Apr)
+    // UTC+9:30 (ACST during standard time, roughly Apr-Oct)
+    // For Feb 2026, it should be ACDT (UTC+10:30)
+    const adelaideOffset = 10.5; // hours ahead of UTC
+
+    // Convert to Adelaide time
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const adelaideTime = new Date(utcTime + (3600000 * adelaideOffset));
+
+    // Format the time
+    this.advisorData.lastUpdated = adelaideTime.toLocaleString('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
@@ -402,6 +436,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       second: '2-digit',
       hour12: true
     });
+  }
+
+  updateAdvisorData() {
+    // 1. Update timestamp with Adelaide time
+    this.updateAdelaideTime();
 
     // 2. Sync sensor analysis values
     const moisture = this.sensors.find(s => s.label === 'Soil Moisture');
@@ -808,16 +847,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
 
   refreshWeather() {
+    if (!this.currentBlock) {
+      console.log('⚠️ refreshWeather: No current block selected');
+      return;
+    }
+
+    console.log('🌤️ Refreshing weather for:', {
+      blockName: this.currentBlock.name,
+      location: this.currentBlock.location.name,
+      lat: this.currentBlock.location.lat,
+      lon: this.currentBlock.location.lon
+    });
+
     this.isLoading = true;
-    this.weatherService.getWeatherForecast().subscribe({
+    this.weatherService.getWeatherForecast(
+      this.currentBlock.location.lat,
+      this.currentBlock.location.lon
+    ).subscribe({
       next: (data) => {
+        console.log('✅ Weather data received:', {
+          temperature: data.current.temperature,
+          location: this.currentBlock?.location.name
+        });
         this.weatherData = data;
         this.isDaytime = !!data.current.isDay;
         this.isLoading = false;
         this.updateAdvisorData(); // Update advisor with new weather data
       },
       error: (err) => {
-        console.error('Failed to fetch weather', err);
+        console.error('❌ Failed to fetch weather', err);
         this.isLoading = false;
       }
     });

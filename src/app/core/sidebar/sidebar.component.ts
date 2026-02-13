@@ -47,6 +47,13 @@ import { AuthService } from '../services/auth.service';
       </nav>
       
       <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">{{ getUserInitials() }}</div>
+          <div class="user-info">
+            <div class="user-name">{{ userProfile?.userName || 'User' }}</div>
+            <div class="farm-name">{{ userProfile?.farmName || 'Farm' }}</div>
+          </div>
+        </div>
         <button class="sign-out-btn" (click)="signOut()">
           <i-lucide [img]="LogOutIcon" class="sign-out-icon"></i-lucide>
           <span>Sign Out</span>
@@ -155,9 +162,58 @@ import { AuthService } from '../services/auth.service';
       flex-shrink: 0;
     }
     
+    
     .sidebar-footer {
       padding: 1rem;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-md);
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: var(--white);
+      flex-shrink: 0;
+    }
+    
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--white);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .farm-name {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .sign-out-btn {
@@ -272,6 +328,15 @@ export class SidebarComponent {
 
   onBlockSelected(block: Block): void {
     this.blockService.setSelectedBlock(block);
+  }
+
+  getUserInitials(): string {
+    if (!this.userProfile?.userName) return 'U';
+    const names = this.userProfile.userName.trim().split(' ');
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return names[0][0].toUpperCase();
   }
 
   signOut(): void {

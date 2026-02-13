@@ -1,7 +1,7 @@
 import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { LucideAngularModule, Bot, Menu, LogOut } from 'lucide-angular';
+import { LucideAngularModule, MessageCircle, Menu, LogOut } from 'lucide-angular';
 import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.model';
 import { Subscription } from 'rxjs';
@@ -26,7 +26,7 @@ import { Subscription } from 'rxjs';
         
         <div class="header-right">
           <button class="grower-gpt-btn hover-lift">
-            <i-lucide [img]="BotIcon" class="gpt-icon"></i-lucide>
+            <i-lucide [img]="MessageCircleIcon" class="gpt-icon"></i-lucide>
             <span class="btn-text">Open Grower GPT</span>
           </button>
         </div>
@@ -202,7 +202,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   private userSubscription?: Subscription;
 
-  BotIcon = Bot;
+  MessageCircleIcon = MessageCircle;
   MenuIcon = Menu;
   LogOutIcon = LogOut;
 

@@ -10,6 +10,8 @@ export interface UserBlock {
     description: string;
     crop?: string;
     area: number; // in hectares
+    latitude: number;
+    longitude: number;
 }
 
 export interface User {

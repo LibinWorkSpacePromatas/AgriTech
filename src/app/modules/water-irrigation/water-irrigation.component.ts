@@ -37,6 +37,7 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
   longitude: number = 0;
   currentLan: string = "";
   selectedBlockName: string = "";
+  selectedBlockLan: string = "";
 
   // Map properties
   private map!: L.Map;
@@ -65,28 +66,7 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
     // Subscribe to active user and map their blocks
     this.authService.activeUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
       if (user) {
-        // Map user blocks to Block interface with unique coordinates
-        this.blocks = user.blocks.map((block, index) => {
-          const alphabet = String.fromCharCode(65 + index);
-          return {
-            id: block.lanslu,
-            name: `Block ${alphabet} - ${block.crop || user.primaryCropName}`,
-            location: user.farmLocation,
-            coordinates: '',
-            size: block.area,
-            sizeUnit: 'ha',
-            grapeVariety: block.crop || user.primaryCropName,
-            crop: block.crop || user.primaryCropName,
-            soilType: block.primarySoilClass,
-            soilDescription: block.description,
-            // Generate unique coordinates for each block
-            lat: -34.5 - (index * 0.01),
-            lon: 138.9 + (index * 0.01),
-            lan: block.lanslu
-          } as Block;
-        });
-
-        console.log('WaterIrrigationComponent: Loaded blocks for user:', user.userName, this.blocks);
+        this.syncBlocksFromGlobal(user);
       }
     });
 
@@ -97,6 +77,7 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
       this.longitude = initialBlock.lon;
       this.currentLan = initialBlock.lan;
       this.selectedBlockName = initialBlock.name;
+      this.selectedBlockLan = initialBlock.lan;
       console.log('WaterIrrigationComponent: Initialized with block:', initialBlock.name);
     }
   }
@@ -107,6 +88,14 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
       .pipe(takeUntil(this.destroy$))
       .subscribe(block => {
         if (block) {
+          // If blocks list is empty (e.g. user just logged in), sync it first
+          if (this.blocks.length === 0) {
+            const currentUser = this.authService.getCurrentUser();
+            if (currentUser) {
+              this.syncBlocksFromGlobal(currentUser);
+            }
+          }
+
           console.log('=== WaterIrrigationComponent: Block Change Event ===');
           console.log('Block received:', block);
           console.log('Block name:', block.name);
@@ -119,11 +108,13 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
           this.longitude = block.lon;
           this.currentLan = block.lan;
           this.selectedBlockName = block.name;
+          this.selectedBlockLan = block.lan;
 
           console.log('Updated component values:');
           console.log('  latitude:', this.latitude);
           console.log('  longitude:', this.longitude);
           console.log('  selectedBlockName:', this.selectedBlockName);
+          console.log('  selectedBlockLan:', this.selectedBlockLan);
 
           // Trigger change detection to update the UI (lat/lon inputs and dropdown)
           this.cdr.detectChanges();
@@ -148,7 +139,12 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
     interval(15 * 60 * 1000)
       .pipe(
         takeUntil(this.destroy$),
-        switchMap(() => this.waterIrrigationService.getIrrigationStatus(this.latitude, this.longitude, this.currentLan))
+        switchMap(() => {
+          // Get current block to extract crop name for auto-refresh
+          const currentBlock = this.blocks.find(b => b.lan === this.currentLan);
+          const cropName = currentBlock?.crop || 'Shiraz';
+          return this.waterIrrigationService.getIrrigationStatus(this.latitude, this.longitude, this.currentLan, cropName);
+        })
       )
       .subscribe({
         next: (status) => {
@@ -237,11 +233,67 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
     });
   }
 
-  onBlockChange(blockName: string): void {
-    const block = this.blocks.find(b => b.name === blockName);
+  onBlockChange(blockLan: string): void {
+    const block = this.blocks.find(b => b.lan === blockLan);
     if (block) {
       this.blockService.setSelectedBlock(block);
     }
+  }
+
+  // Helper method to sync blocks from global service
+  private syncBlocksFromGlobal(user: any): void {
+    if (!user) return;
+
+    // Map user blocks to Block interface with unique coordinates
+    this.blocks = user.blocks.map((block: any, index: number) => {
+      const alphabet = String.fromCharCode(65 + index);
+      
+      // Get real vineyard location based on coordinates
+      let vineyardLocation = user.farmLocation;
+      if (block.latitude && block.longitude) {
+        // Map coordinates to real vineyard locations
+        if (block.latitude === -34.171 && block.longitude === 140.738) {
+          vineyardLocation = 'Angove\'s Winery, Renmark';
+        } else if (block.latitude === -34.2 && block.longitude === 140.745) {
+          vineyardLocation = 'Mallee Estate, Renmark Ave';
+        } else if (block.latitude === -34.524 && block.longitude === 138.963) {
+          vineyardLocation = 'Château Tanunda, Tanunda';
+        } else if (block.latitude === -34.536 && block.longitude === 138.985) {
+          vineyardLocation = 'Yalumba, Angaston';
+        } else if (block.latitude === -35.219 && block.longitude === 138.547) {
+          vineyardLocation = 'd\'Arenberg, McLaren Vale';
+        } else if (block.latitude === -35.225 && block.longitude === 138.553) {
+          vineyardLocation = 'Willunga area, McLaren Vale';
+        } else if (block.latitude === -34.178 && block.longitude === 139.987) {
+          vineyardLocation = 'Waikerie area, Riverland';
+        } else if (block.latitude === -34.185 && block.longitude === 139.995) {
+          vineyardLocation = 'Near Waikerie, Riverland';
+        } else if (block.latitude === -34.536 && block.longitude === 138.985) {
+          vineyardLocation = 'Penfolds, Nuriootpa';
+        } else if (block.latitude === -34.542 && block.longitude === 138.993) {
+          vineyardLocation = 'Wolf Blass, Nuriootpa';
+        }
+      }
+
+      return {
+        id: block.lanslu,
+        name: `BLOCK - ${alphabet} ${block.crop || user.primaryCropName}`,
+        location: vineyardLocation,
+        coordinates: '',
+        size: block.area,
+        sizeUnit: 'ha',
+        grapeVariety: block.crop || user.primaryCropName,
+        crop: block.crop || user.primaryCropName,
+        soilType: block.primarySoilClass,
+        soilDescription: block.description,
+        // Use actual coordinates from user data instead of generated ones
+        lat: block.latitude || environment.irrigation.defaultLatitude,
+        lon: block.longitude || environment.irrigation.defaultLongitude,
+        lan: block.lanslu
+      } as Block;
+    });
+
+    console.log('WaterIrrigationComponent: Synced blocks:', this.blocks);
   }
 
   updateLocationOnMap(): void {
@@ -267,7 +319,12 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
   refreshData(updateMapView: boolean = true): void {
     this.isLoading = true;
     this.error = null;
-    this.waterIrrigationService.getIrrigationStatus(this.latitude, this.longitude, this.currentLan).subscribe({
+    
+    // Get current block to extract crop name
+    const currentBlock = this.blocks.find(b => b.lan === this.currentLan);
+    const cropName = currentBlock?.crop || 'Shiraz';
+    
+    this.waterIrrigationService.getIrrigationStatus(this.latitude, this.longitude, this.currentLan, cropName).subscribe({
       next: (status) => {
         console.log('Final Processed Irrigation Status:', status);
         this.irrigationStatus = status;

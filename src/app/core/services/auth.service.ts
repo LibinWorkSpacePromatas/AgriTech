@@ -42,6 +42,10 @@ export class AuthService {
         return this.activeUserSubject.value !== null;
     }
 
+    getCurrentUser(): User | null {
+        return this.activeUserSubject.value;
+    }
+
     private storeUser(user: User): void {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify({ userId: user.userId }));
     }

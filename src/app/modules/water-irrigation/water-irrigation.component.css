@@ -12,6 +12,18 @@
   margin: 0 auto;
 }
 
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 /* Common Card Styles */
 .card {
   background: white;
@@ -26,7 +38,7 @@
 
 /* Header Card */
 .header-card {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .header-content {
@@ -165,7 +177,7 @@
 
 /* Right Column - Status Summary */
 .status-summary {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .summary-header {
@@ -209,10 +221,10 @@
 
 /* Quick Metrics Row */
 .metrics-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .mini-card {
@@ -256,7 +268,7 @@
 
 /* Soil Profile Card */
 .analysis-card {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .card-title {
@@ -299,7 +311,7 @@
 
 /* Soil Info Card Styles */
 .soil-info-card {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 
 .soil-details {
@@ -381,7 +393,7 @@
 
 /* Calculation Logic Card */
 .logic-card {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   background: #fdfdfd;
 }
 

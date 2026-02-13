@@ -31,8 +31,8 @@
 
             <div class="block-selector">
               <span class="label">SELECT BLOCK</span>
-              <select [(ngModel)]="selectedBlockName" (ngModelChange)="onBlockChange($event)" class="block-dropdown">
-                <option *ngFor="let block of blocks" [value]="block.name">
+              <select [(ngModel)]="selectedBlockLan" (ngModelChange)="onBlockChange($event)" class="block-dropdown">
+                <option *ngFor="let block of blocks" [value]="block.lan">
                   {{ block.name }}
                 </option>
               </select>
@@ -67,66 +67,8 @@
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Right Column: Metrics & Data -->
-      <div class="right-column">
         <ng-container *ngIf="irrigationStatus">
-          <!-- Status Overview -->
-          <div class="status-summary card shadow-sm" [ngClass]="getStatusBgColor(irrigationStatus.status)">
-            <div class="summary-header">
-              <div class="status-indicator-large" [ngClass]="irrigationStatus.status"></div>
-              <div>
-                <span class="tag">Field Status</span>
-                <h2>{{ irrigationStatus.status | titlecase }}</h2>
-              </div>
-            </div>
-            <p class="recommendation-msg">{{ irrigationStatus.irrigationMessage }}</p>
-          </div>
-
-          <!-- Calculation Logic Explanation (NEW) -->
-          <div class="logic-card card shadow-sm" *ngIf="irrigationStatus">
-            <div class="card-title">
-              <i-lucide [img]="ActivityIcon"></i-lucide>
-              <h3>Irrigation Calculation Formula</h3>
-            </div>
-            <div class="formula-container">
-              <div class="formula-box">
-                <code>ETc = ET₀ ({{ irrigationStatus.et0Today | number:'1.1-1' }}) × Kc (0.85) = {{ (irrigationStatus.et0Today * 0.85) | number:'1.1-1' }}mm</code>
-                <code>Deficit = ETc - Rain ({{ irrigationStatus.rainToday | number:'1.1-1' }}mm) = {{ irrigationStatus.netIrrigation | number:'1.1-1' }}mm</code>
-                <code>Adjusted = Deficit / SoilFactor ({{ irrigationStatus.soilFactor | number:'1.2-2' }}) = {{ (irrigationStatus.irrigationNeeded / 0.01) | number:'1.1-1' }}mm</code>
-                <div class="formula-result">
-                  <span class="final-label">Final ML/ha:</span>
-                  <span class="final-value">{{ irrigationStatus.irrigationNeeded | number:'1.3-3' }} ML/ha</span>
-                </div>
-              </div>
-              <div class="formula-legend">
-                <p>• <strong>ETc:</strong> Crop water loss today</p>
-                <p>• <strong>Kc:</strong> Vineyard crop coefficient (0.85)</p>
-                <p>• <strong>Soil Factor:</strong> Adjustment for {{ irrigationStatus.soilData?.Primary_Soil_Classification || 'soil' }} drainage</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Metrics -->
-          <div class="metrics-row">
-            <div class="mini-card shadow-sm">
-              <div class="mini-icon blue"><i-lucide [img]="WavesIcon"></i-lucide></div>
-              <div class="mini-data">
-                <span class="val">{{ irrigationStatus.currentHydration | number:'1.1-1' }}%</span>
-                <span class="lab">Hydration</span>
-              </div>
-            </div>
-            <div class="mini-card shadow-sm">
-              <div class="mini-icon orange"><i-lucide [img]="DropletIcon"></i-lucide></div>
-              <div class="mini-data">
-                <span class="val">{{ irrigationStatus.irrigationNeeded | number:'1.3-3' }}</span>
-                <span class="lab">ML/ha Needed</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Soil Analysis -->
           <div class="analysis-card card shadow-sm">
             <div class="card-title">
               <i-lucide [img]="ActivityIcon"></i-lucide>
@@ -146,7 +88,6 @@
             </div>
           </div>
 
-          <!-- Soil Information (Weighted MVP) -->
           <div class="soil-info-card card shadow-sm" *ngIf="irrigationStatus.soilData">
             <div class="card-title">
               <i-lucide [img]="LayersIcon"></i-lucide>
@@ -174,7 +115,67 @@
               </div>
             </div>
           </div>
+        </ng-container>
+      </div>
 
+      <!-- Right Column: Metrics & Data -->
+      <div class="right-column">
+        <ng-container *ngIf="irrigationStatus">
+          <!-- Status Overview -->
+          <div class="status-summary card shadow-sm" [ngClass]="getStatusBgColor(irrigationStatus.status)">
+            <div class="summary-header">
+              <div class="status-indicator-large" [ngClass]="irrigationStatus.status"></div>
+              <div>
+                <span class="tag">Field Status</span>
+                <h2>{{ irrigationStatus.status | titlecase }}</h2>
+              </div>
+            </div>
+            <p class="recommendation-msg">{{ irrigationStatus.irrigationMessage }}</p>
+          </div>
+
+          <!-- Calculation Logic Explanation (DYNAMIC) -->
+          <div class="logic-card card shadow-sm" *ngIf="irrigationStatus">
+            <div class="card-title">
+              <i-lucide [img]="ActivityIcon"></i-lucide>
+              <h3>Irrigation Calculation Formula</h3>
+            </div>
+            <div class="formula-container">
+              <div class="formula-box">
+                <code>ETc = ET₀ ({{ irrigationStatus.et0Today | number:'1.1-1' }}) × Kc ({{ irrigationStatus.kcValue | number:'1.2-2' }}) = {{ (irrigationStatus.et0Today * irrigationStatus.kcValue) | number:'1.1-1' }}mm</code>
+                <code>Deficit = ETc - Rain ({{ irrigationStatus.rainToday | number:'1.1-1' }}mm) = {{ irrigationStatus.netIrrigation | number:'1.1-1' }}mm</code>
+                <code>Adjusted = Deficit / SoilFactor ({{ irrigationStatus.soilFactor | number:'1.2-2' }}) = {{ (irrigationStatus.irrigationNeeded / 0.01) | number:'1.1-1' }}mm</code>
+                <div class="formula-result">
+                  <span class="final-label">Final ML/ha:</span>
+                  <span class="final-value">{{ irrigationStatus.irrigationNeeded | number:'1.3-3' }} ML/ha</span>
+                </div>
+              </div>
+              <div class="formula-legend">
+                <p>• <strong>ETc:</strong> Crop water loss today</p>
+                <p>• <strong>Kc:</strong> Vineyard crop coefficient ({{ irrigationStatus.kcValue | number:'1.2-2' }})</p>
+                <p>• <strong>Soil Factor:</strong> Adjustment for {{ irrigationStatus.soilData?.Primary_Soil_Classification || 'soil' }} drainage</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Metrics -->
+          <div class="metrics-row">
+            <div class="mini-card shadow-sm">
+              <div class="mini-icon blue"><i-lucide [img]="WavesIcon"></i-lucide></div>
+              <div class="mini-data">
+                <span class="val">{{ irrigationStatus.currentHydration | number:'1.1-1' }}%</span>
+                <span class="lab">Hydration</span>
+              </div>
+            </div>
+            <div class="mini-card shadow-sm">
+              <div class="mini-icon orange"><i-lucide [img]="DropletIcon"></i-lucide></div>
+              <div class="mini-data">
+                <span class="val">{{ irrigationStatus.irrigationNeeded | number:'1.3-3' }}</span>
+                <span class="lab">ML/ha Needed</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Soil Analysis -->
           <!-- Forecast/Weather -->
           <div class="weather-card card shadow-sm">
             <div class="weather-item">

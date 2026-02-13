@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, map, catchError, of, forkJoin, switchMap } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { Observable, map, catchError, of, forkJoin } from 'rxjs';
 import { WeatherService, WeatherData, IrrigationRecommendation } from '../weather-service/weather.service';
 import { SoilService } from '../soil/soil.service';
 import { SoilData } from '../../model/soil.model';
@@ -19,6 +18,7 @@ export interface IrrigationStatus {
   et0Today: number;
   rainToday: number;
   netIrrigation: number;
+  kcValue: number; // Expose Kc for UI verification
   status: 'urgent' | 'monitor' | 'saturated';
   soilReadings: SoilDepthReading[];
   nextIrrigationTime: Date;
@@ -44,31 +44,59 @@ export class WaterIrrigationService {
     90: { min: 0.25, max: 0.55 }
   };
   private readonly KC_FACTOR = 0.85; // Crop coefficient for generic crops
-  private readonly BACKEND_URL = 'http://localhost:8000';
 
   constructor(
-    private http: HttpClient,
     private weatherService: WeatherService,
     private soilService: SoilService
   ) {}
 
-  getIrrigationStatus(lat?: number, lon?: number, lanslu: string = "BCPKFB"): Observable<IrrigationStatus> {
+  /**
+   * Get seasonally-adjusted Kc value based on current month
+   * Uses FAO-56 grapevine coefficients for South Australian climate
+   */
+  private getKcByMonth(): number {
+    const month = new Date().getMonth(); // 0 = January
+    
+    const kcMap: { [key: number]: number } = {
+      8: 0.35,  // September - Budburst
+      9: 0.55,  // October - Early Growth
+      10: 0.70, // November - Canopy Development
+      11: 0.85, // December - Full Canopy
+      0: 0.90,  // January - Peak Water Use
+      1: 0.75,  // February - Ripening
+      2: 0.65,  // March - Late Season
+      3: 0.50   // April - Post Harvest
+    };
+    
+    return kcMap[month] || 0.70; // Default to development stage
+  }
+
+  /**
+   * Get crop-specific Kc value for mid-season (full canopy)
+   * Based on FAO-56 and viticulture research for South Australian varieties
+   */
+  private getCropSpecificKc(cropName: string): number {
+    const cropKcMap: { [key: string]: number } = {
+      'Shiraz': 0.85,
+      'Cabernet Sauvignon': 0.88,
+      'Grenache': 0.80,
+      'Merlot': 0.85,
+      'Chardonnay': 0.78,
+      'Riesling': 0.75,
+      'Semillon': 0.80,
+      'Pinot Grigio': 0.78
+    };
+    
+    return cropKcMap[cropName] || 0.85; // Default to Shiraz if unknown
+  }
+
+  getIrrigationStatus(lat?: number, lon?: number, lanslu: string = "BCPKFB", cropName?: string): Observable<IrrigationStatus> {
     const latitude = lat || -34.53;
     const longitude = lon || 138.96;
 
-    // STEP 1: Find nearest BoM station and load soil data
+    // STEP 1: Load soil data and weather
     return forkJoin({
       soilLoaded: this.soilService.loadSoilData(),
-      nearestStation: this.http.get<any>(`${this.BACKEND_URL}/nearest-station?lat=${latitude}&lon=${longitude}`).pipe(
-        map(data => {
-          console.log('Backend API: /nearest-station response:', data);
-          return data;
-        }),
-        catchError(err => {
-          console.error('Backend error (nearest-station):', err);
-          return of(null);
-        })
-      ),
       weather: this.weatherService.getWeather(latitude, longitude).pipe(
         map(data => {
           console.log('Weather Service: Data fetched for coordinates:', latitude, longitude);
@@ -76,31 +104,22 @@ export class WaterIrrigationService {
         })
       )
     }).pipe(
-      switchMap(({ nearestStation, weather }) => {
-        // If we have a station, fetch its rainfall
-        if (nearestStation && nearestStation.station_id && nearestStation.state_code) {
-          return this.http.get<any>(`${this.BACKEND_URL}/station-rain?station_id=${nearestStation.station_id}&state_code=${nearestStation.state_code}`).pipe(
-            map(rainData => {
-              console.log('Backend API: /station-rain response:', rainData);
-              return { nearestStation, weather, bomRain: rainData.rainfall };
-            }),
-            catchError((err) => {
-              console.error('Backend error (station-rain):', err);
-              return of({ nearestStation, weather, bomRain: null });
-            })
-          );
-        }
-        console.log('No BoM station found for this location, skipping /station-rain');
-        return of({ nearestStation, weather, bomRain: null });
-      }),
-      map(({ nearestStation, weather, bomRain }) => {
+      map(({ weather }) => {
         // Get soil data by LANSLU (Master Logic)
         const soil = this.soilService.getSoilByLANSLU(lanslu);
-        const status = this.calculateIrrigationStatus(weather, soil, bomRain);
         
-        if (nearestStation) {
-          status.bomStation = nearestStation;
-        }
+        // Use weather service rain data as fallback since there's no backend BoM station
+        const fallbackRain = this.calculateDailyRain(weather.rain);
+        
+        const status = this.calculateIrrigationStatus(weather, soil, fallbackRain, cropName);
+        
+        // Provide mock station info for UI display
+        status.bomStation = {
+          station_id: 24048,
+          name: "RENMARK AERO (Mocked)",
+          distance_km: 12.4,
+          state_code: "SA"
+        };
         
         return status;
       }),
@@ -111,13 +130,24 @@ export class WaterIrrigationService {
     );
   }
 
-  private calculateIrrigationStatus(weatherData: WeatherData, soil?: SoilData, bomRain?: number | null): IrrigationStatus {
-    const currentSoilMoisture = weatherData.soilMoisture[0] || 0;
-    
+  private calculateIrrigationStatus(weatherData: WeatherData, soil?: SoilData, bomRain?: number | null, cropName?: string): IrrigationStatus {
+    // Use real Open-Meteo multi-depth soil moisture
+    const moisture30 = (weatherData.soilMoistureDepths?.['0-1cm']?.[0] || 0) * 100;
+    const moisture60 = (weatherData.soilMoistureDepths?.['9-27cm']?.[0] || 0) * 100;
+    const moisture90 = (weatherData.soilMoistureDepths?.['27-81cm']?.[0] || 0) * 100;
+
+    // Current hydration = average of real sensor layers
+    const currentHydration = (moisture30 + moisture60 + moisture90) / 3;
+
     // STEP 1: Calculate ETc (Crop Evapotranspiration)
-    // ETc = ET₀ × Kc
+    // ETc = ET₀ × Kc (crop-specific for mid-season)
     const todayET0 = this.calculateDailyET0(weatherData.et0);
-    const todayETc = todayET0 * this.KC_FACTOR;
+    const kc = this.getCropSpecificKc(cropName || 'Shiraz');
+    
+    // DEBUG: Verify formula update and Kc value
+    console.debug(`[IrrigationFormula] Crop: ${cropName || 'Shiraz'}, Kc: ${kc}, ET0: ${todayET0}`);
+    
+    const todayETc = todayET0 * kc;
 
     // STEP 2: Calculate Net Deficit using BoM Rainfall with Open-Meteo fallback
     // Deficit = ETc - EffectiveRain
@@ -147,19 +177,19 @@ export class WaterIrrigationService {
 
     // STEP 5: Realistic Soil Moisture Logic (Scientific MVP Model)
     // hydration = baselineMoisture + (rain * 0.8 * 2) - (etc / soilFactor) * 1.5
-    let hydration = currentSoilMoisture * 100; // Start with baseline sensor data (0-100 scale)
+    // let hydration = currentSoilMoisture * 100; // Start with baseline sensor data (0-100 scale)
     
-    // Rain recharge (Effective Rain * 2 multiplier for hydration impact)
-    const recharge = (rainToUse * 0.8 * 2);
-    hydration += recharge;
+    // // Rain recharge (Effective Rain * 2 multiplier for hydration impact)
+    // const recharge = (rainToUse * 0.8 * 2);
+    // hydration += recharge;
     
-    // ETc depletion (Soil-adjusted depletion rate)
-    // Sandy soil (low soilFactor) depletes faster; Clay (high soilFactor) depletes slower
-    const depletion = (todayETc / soilFactor) * 1.5;
-    hydration -= depletion;
+    // // ETc depletion (Soil-adjusted depletion rate)
+    // // Sandy soil (low soilFactor) depletes faster; Clay (high soilFactor) depletes slower
+    // const depletion = (todayETc / soilFactor) * 0.8;
+    // hydration -= depletion;
     
-    // Final Clamping (0-100%)
-    const currentHydration = Math.max(0, Math.min(100, hydration));
+    // // Final Clamping (5-100%) with minimum realistic soil moisture floor = 5%
+    // const currentHydration = Math.max(5, Math.min(100, hydration));
     const adjustedMoisture = currentHydration / 100;
 
     // Generate soil readings for different depths
@@ -186,6 +216,7 @@ export class WaterIrrigationService {
       et0Today: todayET0,
       rainToday: rainToUse, // Use BoM rain in the status
       netIrrigation: deficit,
+      kcValue: kc,
       status,
       soilReadings,
       nextIrrigationTime,
@@ -309,6 +340,7 @@ export class WaterIrrigationService {
       et0Today: 0,
       rainToday: 0,
       netIrrigation: 0,
+      kcValue: 0.85,
       status: 'monitor',
       soilReadings: [
         { depth: 30, moisture: 75, status: 'optimal' },

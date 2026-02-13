@@ -278,10 +278,37 @@ export class SidebarComponent {
           // Create alphabet label (A, B, C...)
           const alphabet = String.fromCharCode(65 + index);
 
+          // Get real vineyard location based on coordinates
+          let vineyardLocation = user.farmLocation;
+          if (block.latitude && block.longitude) {
+            // Map coordinates to real vineyard locations
+            if (block.latitude === -34.171 && block.longitude === 140.738) {
+              vineyardLocation = 'Angove\'s Winery, Renmark';
+            } else if (block.latitude === -34.2 && block.longitude === 140.745) {
+              vineyardLocation = 'Mallee Estate, Renmark Ave';
+            } else if (block.latitude === -34.524 && block.longitude === 138.963) {
+              vineyardLocation = 'Château Tanunda, Tanunda';
+            } else if (block.latitude === -34.536 && block.longitude === 138.985) {
+              vineyardLocation = 'Yalumba, Angaston';
+            } else if (block.latitude === -35.219 && block.longitude === 138.547) {
+              vineyardLocation = 'd\'Arenberg, McLaren Vale';
+            } else if (block.latitude === -35.225 && block.longitude === 138.553) {
+              vineyardLocation = 'Willunga area, McLaren Vale';
+            } else if (block.latitude === -34.178 && block.longitude === 139.987) {
+              vineyardLocation = 'Waikerie area, Riverland';
+            } else if (block.latitude === -34.185 && block.longitude === 139.995) {
+              vineyardLocation = 'Near Waikerie, Riverland';
+            } else if (block.latitude === -34.536 && block.longitude === 138.985) {
+              vineyardLocation = 'Penfolds, Nuriootpa';
+            } else if (block.latitude === -34.542 && block.longitude === 138.993) {
+              vineyardLocation = 'Wolf Blass, Nuriootpa';
+            }
+          }
+
           return {
             id: block.lanslu,
             name: `BLOCK - ${alphabet} ${block.crop || user.primaryCropName}`,
-            location: user.farmLocation,
+            location: vineyardLocation,
             coordinates: '', // Placeholder
             size: block.area,
             sizeUnit: 'ha',
@@ -289,9 +316,9 @@ export class SidebarComponent {
             crop: block.crop || user.primaryCropName,
             soilType: block.primarySoilClass,
             soilDescription: block.description,
-            // Generate unique coordinates for each block (same logic as water-irrigation)
-            lat: -34.5 - (index * 0.01),
-            lon: 138.9 + (index * 0.01),
+            // Use actual coordinates from user data instead of generated ones
+            lat: block.latitude || -34.53,
+            lon: block.longitude || 138.96,
             lan: block.lanslu
           } as Block;
         });

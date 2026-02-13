@@ -74,14 +74,23 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
     const block = this.blockService.getSelectedBlock();
     this.irrigationService.getIrrigationStatus(block.lat, block.lon, block.lan, block.crop)
       .pipe(take(1))
-      .subscribe(status => {
-        this.irrigationData = status;
-        
-        // Add initial greeting
-        this.chatHistory.push({
-          role: 'assistant',
-          content: `Hello! I've analyzed **${block.name} - ${block.crop}**. Currently, soil moisture is at ${status.currentHydration.toFixed(1)}%, which is ${status.status}. Would you like an agronomic insight?`
-        });
+      .subscribe({
+        next: (status) => {
+          this.irrigationData = status;
+          
+          // Add initial greeting
+          this.chatHistory.push({
+            role: 'assistant',
+            content: `Hello! I've analyzed **${block.name} - ${block.crop}**. Currently, soil moisture is at ${status.currentHydration.toFixed(1)}%, which is ${status.status}. Would you like an agronomic insight?`
+          });
+        },
+        error: (err) => {
+          console.error('Error fetching irrigation status:', err);
+          this.chatHistory.push({
+            role: 'assistant',
+            content: `Hello! I'm here to help, but I'm having trouble fetching the latest irrigation data for **${block.name}**. You can still ask me questions about viticulture or the platform!`
+          });
+        }
       });
   }
 
@@ -166,10 +175,14 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
 
       this.chatHistory.push({ role: 'assistant', content: reply });
     } catch (error: any) {
-      console.error('Error calling GrowerGPT:', error);
-      const errorMessage = error.message?.includes('Rate Limited') 
-        ? 'The AI agronomist is currently handling too many requests. Please wait a minute and click "Retry Connection".'
-        : 'I apologize, but I encountered an error connecting to the agronomic engine. Please try again later.';
+      console.error('Grower GPT Error:', error);
+      let errorMessage = 'I apologize, but I encountered an error connecting to the agronomic engine. Please try again later.';
+      
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        errorMessage = 'Authentication Error: The AI service API key appears to be invalid or expired. Please contact support or check your configuration.';
+      } else if (error.message?.includes('Rate Limited') || error.message?.includes('429')) {
+        errorMessage = 'The AI service is currently busy or handling too many requests. Please wait a moment and click "Retry Connection".';
+      }
       
       this.chatHistory.push({ 
         role: 'assistant', 

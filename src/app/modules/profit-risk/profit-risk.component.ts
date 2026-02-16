@@ -385,114 +385,114 @@ export class ProfitRiskComponent implements OnInit {
       return ((cropRevenue - wineGrapesRevenue) / wineGrapesRevenue) * 100;
   }
 
-  // Quadrant positioning for Global Market Quadrant view
-  readonly quadrantCrops = (() => {
-      const wineGrapesRevenue = 759;
-      return [
-          {
-              name: 'Almonds',
-              icon: '🌰',
-              color: '#16A34A',
-              quadrantX: 18,
-              quadrantY: 22,
-              bubbleSize: 90,
-              zIndex: 2,
-              revenuePerML: 3000,
-              percentageVsWine: Math.round(((3000 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
-              quadrant: 'Quadrant 1 - OPPORTUNITY',
-              badges: [],
-              metrics: [
-                  'Australia\'s #1 irrigated crop [ABC Feb 2024]',
-                  'Stable kernel demand despite water debate',
-                  '3 t/ha yield at $10,000/t market price'
-              ],
-              strategicAction: 'EXPAND PRODUCTION',
-              source: 'Hort Innovation Almonds 2024'
-          },
-          {
-              name: 'Citrus (Navel)',
-              icon: '🍊',
-              color: '#3B82F6',
-              quadrantX: 35,
-              quadrantY: 20,
-              bubbleSize: 90,
-              zIndex: 2,
-              revenuePerML: 10000,
-              percentageVsWine: Math.round(((10000 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
-              quadrant: 'Quadrant 1 - OPPORTUNITY',
-              badges: [],
-              metrics: [
-                  'Navel oranges stable export demand',
-                  'Reliable premium market despite China issues',
-                  '40 t/ha yield at $2,000/t market price'
-              ],
-              strategicAction: 'MAINTAIN / EXPAND',
-              source: 'Citrus Australia 2024'
-          },
-          {
-              name: 'Olives',
-              icon: '🫒',
-              color: '#16A34A',
-              quadrantX: 28,
-              quadrantY: 38,
-              bubbleSize: 90,
-              zIndex: 3,
-              revenuePerML: 6429,
-              percentageVsWine: Math.round(((6429 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
-              quadrant: 'Quadrant 1 - OPPORTUNITY',
-              badges: ['✓ PIRSA 2025 VALIDATED'],
-              metrics: [
-                  'Water: 5-9.5 ML/ha (30% LESS than wine grapes) [PIRSA 2025]',
-                  'High-density setup: $28,500/ha uses existing drip irrigation',
-                  'Yield: 12-18 t/ha @ $950/t fresh ($3k/t oil equivalent)',
-                  'Operating costs: $5,900/ha (30-40% LESS labor than grapes)',
-                  'Net profit: +$76k-$121k/ha mature (yr 7+) [PIRSA Financial Model]',
-                  '70% of vineyard rows ideal for conversion; 3.6-5m spacing preferred'
-              ],
-              strategicAction: 'CONVERT 10-20% VINEYARDS - PIRSA PRIORITY PROGRAM',
-              source: 'PIRSA/CCW Factsheet 2025',
-              hasFactsheet: true
-          },
-          {
-              name: 'Table Grapes',
-              icon: '🍇',
-              color: '#A855F7',
-              quadrantX: 22,
-              quadrantY: 35,
-              bubbleSize: 90,
-              zIndex: 2,
-              revenuePerML: 7857,
-              percentageVsWine: Math.round(((7857 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
-              quadrant: 'Quadrant 1 - OPPORTUNITY',
-              badges: [],
-              metrics: [
-                  'Premium fresh market vs bulk wine glut',
-                  'Sunmuscat export demand stable',
-                  '22 t/ha yield at $2,500/t market price'
-              ],
-              strategicAction: 'UPGRADE TO PREMIUM VARIETIES',
-              source: 'Australian Table Grapes 2024'
-          },
-          {
-              name: 'Wine Grapes',
-              icon: '🍷',
-              color: '#EF4444',
-              quadrantX: 75,
-              quadrantY: 22,
-              bubbleSize: 90,
-              zIndex: 1,
-              revenuePerML: 759,
-              percentageVsWine: 0,
-              quadrant: 'Quadrant 2 - REDUCE/EXIT',
-              badges: [],
-              metrics: [
-                  '391kt oversupply (WGCSA 2024)',
-                  'Shiraz $200/t (below break-even)',
-                  'Weak export demand + strong supply'
-              ],
-              strategicAction: 'REDUCE / EXIT',
-              source: 'WGCSA 2024'
-          }
-      ];
-  })();
+    // Quadrant positioning for Global Market Quadrant view
+    readonly quadrantCrops = (() => {
+        const wineGrapesRevenue = 759;
+        return [
+            {
+                name: 'Almonds',
+                icon: '🌰',
+                color: '#F59E0B',
+                quadrantX: 18,
+                quadrantY: 22,
+                bubbleSize: 90,
+                zIndex: 2,
+                revenuePerML: 3000,
+                percentageVsWine: Math.round(((3000 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
+                quadrant: 'Quadrant 1 - OPPORTUNITY',
+                badges: [],
+                metrics: [
+                    'Australia\'s #1 irrigated crop [ABC Feb 2024]',
+                    'Stable kernel demand despite water debate',
+                    '3 t/ha yield at $10,000/t market price'
+                ],
+                strategicAction: 'EXPAND PRODUCTION',
+                source: 'Hort Innovation Almonds 2024'
+            },
+            {
+                name: 'Citrus (Navel)',
+                icon: '🍊',
+                color: '#3B82F6',
+                quadrantX: 35,
+                quadrantY: 20,
+                bubbleSize: 90,
+                zIndex: 2,
+                revenuePerML: 10000,
+                percentageVsWine: Math.round(((10000 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
+                quadrant: 'Quadrant 1 - OPPORTUNITY',
+                badges: [],
+                metrics: [
+                    'Navel oranges stable export demand',
+                    'Reliable premium market despite China issues',
+                    '40 t/ha yield at $2,000/t market price'
+                ],
+                strategicAction: 'MAINTAIN / EXPAND',
+                source: 'Citrus Australia 2024'
+            },
+            {
+                name: 'Olives',
+                icon: '🫒',
+                color: '#16A34A',
+                quadrantX: 28,
+                quadrantY: 38,
+                bubbleSize: 90,
+                zIndex: 3,
+                revenuePerML: 6429,
+                percentageVsWine: Math.round(((6429 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
+                quadrant: 'Quadrant 1 - OPPORTUNITY',
+                badges: ['✓ PIRSA 2025 VALIDATED'],
+                metrics: [
+                    'Water: 5-9.5 ML/ha (30% LESS than wine grapes) [PIRSA 2025]',
+                    'High-density setup: $28,500/ha uses existing drip irrigation',
+                    'Yield: 12-18 t/ha @ $950/t fresh ($3k/t oil equivalent)',
+                    'Operating costs: $5,900/ha (30-40% LESS labor than grapes)',
+                    'Net profit: +$76k-$121k/ha mature (yr 7+) [PIRSA Financial Model]',
+                    '70% of vineyard rows ideal for conversion; 3.6-5m spacing preferred'
+                ],
+                strategicAction: 'CONVERT 10-20% VINEYARDS - PIRSA PRIORITY PROGRAM',
+                source: 'PIRSA/CCW Factsheet 2025',
+                hasFactsheet: true
+            },
+            {
+                name: 'Table Grapes',
+                icon: '🍇',
+                color: '#A855F7',
+                quadrantX: 22,
+                quadrantY: 35,
+                bubbleSize: 90,
+                zIndex: 2,
+                revenuePerML: 7857,
+                percentageVsWine: Math.round(((7857 - wineGrapesRevenue) / wineGrapesRevenue) * 100),
+                quadrant: 'Quadrant 1 - OPPORTUNITY',
+                badges: [],
+                metrics: [
+                    'Premium fresh market vs bulk wine glut',
+                    'Sunmuscat export demand stable',
+                    '22 t/ha yield at $2,500/t market price'
+                ],
+                strategicAction: 'UPGRADE TO PREMIUM VARIETIES',
+                source: 'Australian Table Grapes 2024'
+            },
+            {
+                name: 'Wine Grapes',
+                icon: '🍷',
+                color: '#EF4444',
+                quadrantX: 75,
+                quadrantY: 22,
+                bubbleSize: 90,
+                zIndex: 1,
+                revenuePerML: 759,
+                percentageVsWine: 0,
+                quadrant: 'Quadrant 2 - REDUCE/EXIT',
+                badges: [],
+                metrics: [
+                    '391kt oversupply (WGCSA 2024)',
+                    'Shiraz $200/t (below break-even)',
+                    'Weak export demand + strong supply'
+                ],
+                strategicAction: 'REDUCE / EXIT',
+                source: 'WGCSA 2024'
+            }
+        ];
+    })();
 }

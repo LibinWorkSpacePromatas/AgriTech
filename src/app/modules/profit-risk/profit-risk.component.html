@@ -56,7 +56,8 @@
                     <h3>Global Market Quadrant</h3>
                 </div>
             </div>
-            <p class="quadrant-subtitle">Positioning crops by Global Supply vs Demand Constraints • Click bubbles for WGCSA 2024 details</p>
+            <p class="quadrant-subtitle">Positioning crops by Global Supply vs Demand Constraints • Click bubbles for
+                WGCSA 2024 details</p>
 
             <div class="quadrant-container">
                 <!-- Quadrant Chart Area -->
@@ -115,30 +116,12 @@
 
                 <!-- Legend -->
                 <div class="quadrant-legend">
-                    <div class="legend-item">
-                        <span class="legend-dot" style="background-color: #EF4444;"></span>
-                        <span>Wine Grapes</span>
-                        <span class="legend-value">$759/ML</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot" style="background-color: #22C55E;"></span>
-                        <span>Almonds</span>
-                        <span class="legend-value">$3,000/ML</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot" style="background-color: #F59E0B;"></span>
-                        <span>Olives</span>
-                        <span class="legend-value">$6,429/ML</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot" style="background-color: #3B82F6;"></span>
-                        <span>Citrus</span>
-                        <span class="legend-value">$10,000/ML</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-dot" style="background-color: #A855F7;"></span>
-                        <span>Table Grapes</span>
-                        <span class="legend-value">$7,857/ML</span>
+                    <div class="legend-item interactable" *ngFor="let crop of quadrantCrops"
+                        (click)="selectedQuadrantCrop.set(crop)" (mouseenter)="hoveredCrop.set(crop)"
+                        (mouseleave)="hoveredCrop.set(null)">
+                        <span class="legend-dot" [style.background-color]="crop.color"></span>
+                        <span>{{ crop.name }}</span>
+                        <span class="legend-value">${{ crop.revenuePerML | number:'1.0-0' }}/ML</span>
                     </div>
                 </div>
             </div>
@@ -153,7 +136,10 @@
                         <div class="modal-crop-icon">{{ selectedQuadrantCrop()!.icon }}</div>
                         <div>
                             <h2 class="modal-crop-name">{{ selectedQuadrantCrop()!.name }}</h2>
-                            <div class="modal-quadrant-badge">{{ selectedQuadrantCrop()!.quadrant }}</div>
+
+                            <div class="modal-quadrant-badge"
+                                [class.critical]="selectedQuadrantCrop()!.quadrant.includes('REDUCE') || selectedQuadrantCrop()!.riskLevel === 'CRITICAL'">
+                                {{ selectedQuadrantCrop()!.quadrant }}</div>
                             <div class="modal-badges"
                                 *ngIf="selectedQuadrantCrop()!.badges && selectedQuadrantCrop()!.badges.length > 0">
                                 <span class="modal-badge-pill" *ngFor="let badge of selectedQuadrantCrop()!.badges">{{
@@ -166,7 +152,8 @@
 
                 <!-- Quadrant Banner -->
                 <div class="modal-quadrant-banner"
-                    [class.opportunity]="selectedQuadrantCrop()!.quadrant.includes('OPPORTUNITY')">
+                    [class.opportunity]="selectedQuadrantCrop()!.quadrant.includes('OPPORTUNITY')"
+                    [class.critical]="selectedQuadrantCrop()!.quadrant.includes('REDUCE') || selectedQuadrantCrop()!.riskLevel === 'CRITICAL'">
                     <span class="banner-icon">✓</span>
                     <span class="banner-text">{{ selectedQuadrantCrop()!.quadrant.toUpperCase() }}</span>
                 </div>
@@ -179,7 +166,10 @@
                     </div>
                     <div class="modal-metric-box">
                         <div class="metric-label">vs Wine Grapes</div>
-                        <div class="metric-value positive">+{{ selectedQuadrantCrop()!.percentageVsWine }}%</div>
+
+                        <div class="metric-value positive"
+                            [class.critical]="selectedQuadrantCrop()!.quadrant.includes('REDUCE') || selectedQuadrantCrop()!.riskLevel === 'CRITICAL'">
+                            +{{ selectedQuadrantCrop()!.percentageVsWine }}%</div>
                     </div>
                 </div>
 
@@ -188,14 +178,16 @@
                     <h3 class="section-title">📊 OFFICIAL 2024 METRICS</h3>
                     <ul class="metrics-list">
                         <li *ngFor="let metric of selectedQuadrantCrop()!.metrics">
-                            <span class="check-icon">✓</span>
+                            <span class="check-icon"
+                                [class.critical]="selectedQuadrantCrop()!.quadrant.includes('REDUCE') || selectedQuadrantCrop()!.riskLevel === 'CRITICAL'">✓</span>
                             <span>{{ metric }}</span>
                         </li>
                     </ul>
                 </div>
 
                 <!-- Strategic Action -->
-                <div class="modal-strategic-action">
+                <div class="modal-strategic-action"
+                    [class.critical]="selectedQuadrantCrop()!.quadrant.includes('REDUCE') || selectedQuadrantCrop()!.riskLevel === 'CRITICAL'">
                     <h3 class="action-title">🎯 STRATEGIC ACTION</h3>
                     <div class="action-recommendation">{{ selectedQuadrantCrop()!.strategicAction }}</div>
                 </div>
@@ -213,7 +205,7 @@
     </div>
 
     <!-- Alternative Crop Scenario View (existing content) -->
-    <div *ngIf="selectedScenario() === 'alternative'">
+    <div *ngIf="selectedScenario() === 'alternative'" class="scenario-container">
         <!-- Water Allocation Slider -->
         <div class="allocation-card card">
             <div class="allocation-header">
@@ -224,7 +216,16 @@
                 <span class="allocation-value">{{ waterAllocation() }}%</span>
                 <div class="bankruptcy-toggle">
                     <i-lucide [img]="AlertTriangle" class="icon-gray"></i-lucide>
-                    <span>Show Bankruptcy Impact</span>
+                    <div class="bankruptcy-label">
+                        <span>Show Bankruptcy Impact</span>
+                        <button class="bankruptcy-help-icon" type="button">
+                            <i-lucide [img]="HelpCircle" [size]="10" class="icon-help"></i-lucide>
+                            <div class="bankruptcy-tooltip">
+                                Adds a crisis haircut to wine grape revenue only, so you can see worst‑case risk
+                                compared with alternative crops.
+                            </div>
+                        </button>
+                    </div>
                     <button class="switch" [class.checked]="showBankruptcyImpact()"
                         (click)="showBankruptcyImpact.set(!showBankruptcyImpact())">
                         <span class="slider"></span>
@@ -690,6 +691,3 @@
                             <span>Contact Rural Financial Counselling Service for free confidential support</span>
                         </li>
                     </ul>
-                </div>
-            </div>
-        </div>

@@ -1,266 +1,73 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AdelaideTimePipe } from '../../shared/pipes/adelaide-time.pipe';
-import { LucideAngularModule, TrendingUp, AlertTriangle, DollarSign, BarChart3, ShieldCheck } from 'lucide-angular';
+import { 
+  LucideAngularModule, 
+  TrendingUp, 
+  AlertTriangle, 
+  DollarSign, 
+  BarChart3, 
+  ShieldCheck,
+  Info, 
+  HelpCircle, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Droplets, 
+  Lightbulb, 
+  BarChart2, 
+  PieChart, 
+  Globe 
+} from 'lucide-angular';
 import { UserDataService } from '../../core/services/user-data.service';
 import { User } from '../../core/models/user.model';
+
+interface Crop {
+    name: string;
+    yieldPerHa: number; // tonnes/ha
+    pricePerTon: number; // $
+    waterMLPerHa: number; // ML/ha
+    variableCosts: number; // $/ha
+    fixedCosts: number; // $/ha
+    volatilityFactor: number; // 0-1
+    color: string;
+    type: 'core' | 'alternative';
+    marginParams?: { // Specific overrides for Net Margin chart to match reference
+        revenueAt100: number;
+        costsAt100: number;
+    };
+    // New fields for Matrix
+    capitalCost?: number;
+    yearsStr?: string;
+    riskLevel?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+    badges?: Array<{ text: string; type: 'crisis' | 'verified' }>;
+}
 
 @Component({
   selector: 'app-profit-risk',
   standalone: true,
-  imports: [CommonModule, AdelaideTimePipe, LucideAngularModule],
-  template: `
-    <div class="page-container fade-in">
-      <div class="page-header">
-        <div class="header-title-section">
-          <i-lucide [img]="TrendingIcon" class="page-icon"></i-lucide>
-          <div>
-            <h1>Profit & Risk</h1>
-            <p class="subtitle">AI-powered harvest forecasting and financial risk appraisal</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="metrics-grid" *ngIf="user && user.financials">
-        <div class="metric-card gold-card hover-lift">
-          <div class="card-header">
-            <i-lucide [img]="DollarIcon" class="card-icon"></i-lucide>
-            <h3>Projected ROI</h3>
-          </div>
-          <div class="metric-value">
-            <span class="value">{{user.financials.projectedRoi}}</span>
-            <span class="unit">%</span>
-          </div>
-          <div class="metric-footer">
-            <i-lucide [img]="BarChartIcon" class="footer-icon"></i-lucide>
-            <span>+2.1% from last season</span>
-          </div>
-        </div>
-        
-        <div class="metric-card hover-lift">
-          <div class="card-header">
-            <i-lucide [img]="ShieldIcon" class="card-icon"></i-lucide>
-            <h3>Risk Index</h3>
-          </div>
-          <div class="metric-value">
-            <span class="value">{{user.financials.riskIndex}}</span>
-          </div>
-          <div class="metric-footer">
-            <span class="status-indicator" [ngClass]="user.financials.riskIndex === 'Low' ? 'status-normal' : 'status-warning'"></span>
-            <span>{{user.financials.riskIndex === 'Low' ? 'Minimal environmental threat' : 'Potential environmental threat'}}</span>
-          </div>
-        </div>
-        
-        <div class="metric-card hover-lift">
-          <div class="card-header">
-            <i-lucide [img]="AlertIcon" class="card-icon"></i-lucide>
-            <h3>Potential Loss</h3>
-          </div>
-          <div class="metric-value">
-            <span class="value">{{user.financials.potentialLoss | currency}}</span>
-          </div>
-          <div class="metric-footer">
-            <span>{{user.financials.potentialLoss === 0 ? 'No active threats detected' : 'Threats detected'}}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="content-section mt-4" *ngIf="user && user.financials">
-        <div class="card">
-          <div class="card-header">
-            <h3>Harvest Yield Projections</h3>
-          </div>
-          <div class="card-body">
-            <div class="projection-stats">
-              <div class="stat-item">
-                <span class="stat-label">Estimated Tonnage</span>
-                <span class="stat-value">{{user.financials.estimatedYield}} t/ha</span>
-              </div>
-              <div class="stat-divider"></div>
-              <div class="stat-item">
-                <span class="stat-label">Market Value (Est.)</span>
-                <span class="stat-value">{{user.financials.marketValue | currency}} / ton</span>
-              </div>
-              <div class="stat-divider"></div>
-              <div class="stat-item">
-                <span class="stat-label">Confidence Level</span>
-                <span class="stat-value">{{user.financials.confidenceLevel}}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .page-container {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-    
-    .header-title-section {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .page-icon {
-      width: 48px;
-      height: 48px;
-      color: #059669;
-    }
-
-    h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #1e293b;
-      margin: 0;
-    }
-
-    .subtitle {
-      color: #64748b;
-      margin: 0.25rem 0 0 0;
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .metric-card {
-      background: white;
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .gold-card {
-      background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
-      border-color: #fde68a;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .card-icon {
-      width: 24px;
-      height: 24px;
-      color: #d97706;
-    }
-
-    h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #475569;
-      margin: 0;
-    }
-
-    .metric-value {
-      display: flex;
-      align-items: baseline;
-      gap: 0.25rem;
-    }
-
-    .value {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: #1e293b;
-    }
-
-    .unit {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #64748b;
-    }
-
-    .metric-footer {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .status-normal { background-color: #10b981; }
-    .status-warning { background-color: #f59e0b; }
-
-    .projection-stats {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: 1rem 0;
-    }
-
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #1e293b;
-    }
-
-    .stat-divider {
-      width: 1px;
-      height: 40px;
-      background-color: #e2e8f0;
-    }
-
-    .mt-4 { margin-top: 1.5rem; }
-
-    .card {
-      background: white;
-      border-radius: 1.25rem;
-      border: 1px solid #e2e8f0;
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid #e2e8f0;
-      background: #f8fafc;
-    }
-
-    .card-body {
-      padding: 1.5rem;
-    }
-
-    .hover-lift {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .hover-lift:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
-  `]
+  imports: [CommonModule, FormsModule, AdelaideTimePipe, LucideAngularModule],
+  templateUrl: './profit-risk.component.html',
+  styleUrls: ['./profit-risk.component.css']
 })
 export class ProfitRiskComponent implements OnInit {
+  // Icons
+  readonly TrendingUp = TrendingUp;
+  readonly AlertTriangle = AlertTriangle;
+  readonly DollarSign = DollarSign;
+  readonly BarChart3 = BarChart3;
+  readonly ShieldCheck = ShieldCheck;
+  readonly Info = Info;
+  readonly HelpCircle = HelpCircle;
+  readonly ArrowUpRight = ArrowUpRight;
+  readonly ArrowDownRight = ArrowDownRight;
+  readonly Droplets = Droplets;
+  readonly Lightbulb = Lightbulb;
+  readonly BarChart2 = BarChart2;
+  readonly PieChart = PieChart;
+  readonly Globe = Globe;
+  
+  // Aliases for compatibility with template
   TrendingIcon = TrendingUp;
   AlertIcon = AlertTriangle;
   DollarIcon = DollarSign;
@@ -269,9 +76,304 @@ export class ProfitRiskComponent implements OnInit {
 
   user: User | undefined;
 
+  // State
+  waterAllocation = signal<number>(100); // Default 100% as requested
+  showBankruptcyImpact = signal<boolean>(false);
+  selectedScenario = signal<'alternative' | 'global'>('alternative');
+  selectedCropName = signal<string>('Wine Grapes');
+  hoveredSegment = signal<string | null>(null);
+  hoveredRevenueCrop = signal<string | null>(null);
+
+  // Constants
+  readonly WATER_PRICE_PER_ML = 150; // Assumed temporary value, adjust if needed
+
+  // Data
+  crops: Crop[] = [
+      {
+          name: 'Wine Grapes',
+          yieldPerHa: 12,
+          pricePerTon: 244,
+          waterMLPerHa: 6,
+          variableCosts: 2500,
+          fixedCosts: 1300,
+          volatilityFactor: 0.35,
+          color: '#EF4444',
+          type: 'core',
+          marginParams: { revenueAt100: 6225, costsAt100: 8000 },
+          capitalCost: 0,
+          yearsStr: 'Ongoing losses',
+          riskLevel: 'CRITICAL',
+          badges: [{ text: '2024 Crisis', type: 'crisis' }]
+      },
+      {
+          name: 'Olives',
+          yieldPerHa: 12,
+          pricePerTon: 2678.5, // Adjusted to match Risk Adj Rev $5464 (6428 * 0.85)
+          waterMLPerHa: 5,
+          variableCosts: 12000,
+          fixedCosts: 4000,
+          volatilityFactor: 0.15,
+          color: '#22C55E',
+          type: 'alternative',
+          marginParams: { revenueAt100: 45000, costsAt100: 5900 },
+          capitalCost: 28500,
+          yearsStr: '4-6 years',
+          riskLevel: 'LOW',
+          badges: [{ text: 'PIRSA', type: 'verified' }]
+      },
+      {
+          name: 'Almonds',
+          yieldPerHa: 3.5,
+          pricePerTon: 10285,
+          waterMLPerHa: 12,
+          variableCosts: 18000,
+          fixedCosts: 5000,
+          volatilityFactor: 0.2,
+          color: '#F59E0B',
+          type: 'alternative',
+          marginParams: { revenueAt100: 30000, costsAt100: 8500 },
+          capitalCost: 40000,
+          yearsStr: '5 years',
+          riskLevel: 'MEDIUM'
+      },
+      {
+          name: 'Citrus',
+          yieldPerHa: 45,
+          pricePerTon: 2000,
+          waterMLPerHa: 9,
+          variableCosts: 50000,
+          fixedCosts: 13000,
+          volatilityFactor: 0.18, // Adjusted
+          color: '#3B82F6',
+          type: 'alternative',
+          marginParams: { revenueAt100: 80000, costsAt100: 17500 },
+          capitalCost: 32500,
+          yearsStr: '4 years',
+          riskLevel: 'LOW'
+      },
+      {
+          name: 'Table Grapes',
+          yieldPerHa: 22,
+          pricePerTon: 2500,
+          waterMLPerHa: 7,
+          variableCosts: 30000,
+          fixedCosts: 6000,
+          volatilityFactor: 0.20, // Adjusted
+          color: '#A855F7',
+          type: 'alternative',
+          marginParams: { revenueAt100: 55000, costsAt100: 22500 },
+          capitalCost: 25000,
+          yearsStr: '3 years',
+          riskLevel: 'LOW'
+      }
+  ];
+
   constructor(private userDataService: UserDataService) {}
 
   ngOnInit() {
     this.user = this.userDataService.getUserById('U001');
+  }
+
+  // Computed Values
+  cropMetrics = computed(() => {
+      const allocation = this.waterAllocation() / 100;
+
+      return this.crops.map(crop => {
+          // Logic for Revenue Chart (Standard)
+          const effectiveWaterProportion = allocation;
+          const adjustedYield = crop.yieldPerHa * effectiveWaterProportion;
+          const revenuePerHaStandard = adjustedYield * crop.pricePerTon;
+          const revenuePerML = crop.waterMLPerHa > 0 ? revenuePerHaStandard / crop.waterMLPerHa : 0;
+          const riskAdjustedRevenuePerML = revenuePerML * (1 - crop.volatilityFactor);
+
+          // Logic for Net Margin Chart (Specific Targets)
+          // Revenue scales with allocation, Costs stay fixed
+          const marginRevenue = (crop.marginParams?.revenueAt100 || 0) * allocation;
+          const marginCosts = crop.marginParams?.costsAt100 || 0;
+          const netMarginPerHa = marginRevenue - marginCosts;
+
+          const yearsToProfit = netMarginPerHa > 0 ? Math.ceil(30000 / netMarginPerHa) : 'Ongoing losses';
+
+          return {
+              ...crop,
+              revenuePerHa: marginRevenue, // Use margin revenue for tooltip
+              totalCostsPerHa: marginCosts, // Use margin costs for tooltip
+              netMarginPerHa,
+              revenuePerML,
+              riskAdjustedRevenuePerML,
+              yearsToProfit
+          };
+      });
+  });
+
+  riskAdjustedMetrics = computed(() => {
+      return this.cropMetrics().filter(c => c.type === 'alternative').sort((a, b) => a.riskAdjustedRevenuePerML - b.riskAdjustedRevenuePerML);
+  });
+
+  // Fixed order for Revenue per ML chart (never sorted by value)
+  cropMetricsFixedOrder = computed(() => {
+      const metrics = this.cropMetrics();
+      const order = ['Wine Grapes', 'Almonds', 'Olives', 'Table Grapes', 'Citrus'];
+      return order.map(name => metrics.find(c => c.name === name)).filter((c): c is NonNullable<typeof c> => c !== undefined);
+  });
+
+  // Selected Crop Metrics for Cost Structure
+  selectedCropMetrics = computed(() => {
+      const crop = this.cropMetrics().find(c => c.name === this.selectedCropName());
+      if (!crop) return null;
+
+      const revenue = crop.revenuePerHa;
+      const costs = crop.totalCostsPerHa;
+      const margin = crop.netMarginPerHa;
+      const capital = crop.capitalCost || 0;
+      const isCritical = crop.riskLevel === 'CRITICAL';
+
+      let chartData: any = {};
+
+      if (isCritical) {
+          // CRITICAL: 2-segment chart (Revenue vs Costs)
+          const totalPie = revenue + costs;
+          chartData = {
+              costPercentage: totalPie > 0 ? (costs / totalPie) * 100 : 0,
+              revenuePercentage: totalPie > 0 ? (revenue / totalPie) * 100 : 0
+          };
+      } else {
+          // NON-CRITICAL: 3-segment chart (Input + Capital + Margin)
+          const safeMargin = Math.max(0, margin);
+          const totalPie = costs + capital + safeMargin;
+          chartData = {
+              inputPct: totalPie > 0 ? (costs / totalPie) * 100 : 0,
+              capitalPct: totalPie > 0 ? (capital / totalPie) * 100 : 0,
+              marginPct: totalPie > 0 ? (safeMargin / totalPie) * 100 : 0
+          };
+      }
+
+      return {
+          name: crop.name,
+          revenue,
+          costs,
+          margin,
+          capital,
+          color: crop.color,
+          isCritical,
+          ...chartData
+      };
+  });
+
+  selectCrop(name: string) {
+      this.selectedCropName.set(name);
+  }
+
+  readonly WINE_GRAPE_BASELINE = 493.44512195121956;
+
+  wineGrapeMetrics = computed(() => {
+      return this.cropMetrics().find(c => c.name === 'Wine Grapes');
+  });
+
+  protected readonly Math = Math;
+
+  // Tooltip Helper
+  getHoveredPercentage(metrics: any): number {
+      if (metrics.isCritical) {
+          if (this.hoveredSegment() === 'costs') return metrics.costPercentage;
+          if (this.hoveredSegment() === 'revenue') return metrics.revenuePercentage;
+      } else {
+          if (this.hoveredSegment() === 'input') return metrics.inputPct;
+          if (this.hoveredSegment() === 'capital') return metrics.capitalPct;
+          if (this.hoveredSegment() === 'margin') return metrics.marginPct;
+      }
+      return 0;
+  }
+
+  getHoveredValue(metrics: any): number {
+      if (metrics.isCritical) {
+          if (this.hoveredSegment() === 'costs') return metrics.costs;
+          if (this.hoveredSegment() === 'revenue') return metrics.revenue;
+      } else {
+          if (this.hoveredSegment() === 'input') return metrics.costs;
+          if (this.hoveredSegment() === 'capital') return metrics.capital;
+          if (this.hoveredSegment() === 'margin') return metrics.margin;
+      }
+      return 0;
+  }
+
+  getHoveredLabel(): string {
+      if (this.hoveredSegment() === 'costs' || this.hoveredSegment() === 'input') return 'Input Costs';
+      if (this.hoveredSegment() === 'revenue') return 'Revenue';
+      if (this.hoveredSegment() === 'capital') return 'Capital Investment';
+      if (this.hoveredSegment() === 'margin') return 'Net Margin';
+      return '';
+  }
+
+  // Chart Scaling
+  readonly MARGIN_MAX = 80000;
+  readonly MARGIN_MIN = -10000;
+  readonly MARGIN_RANGE = this.MARGIN_MAX - this.MARGIN_MIN;
+
+  getBarHeightPercentage(value: number): number {
+      return (Math.abs(value) / this.MARGIN_RANGE) * 100;
+  }
+
+  getZeroLinePosition(): number {
+      return (Math.abs(this.MARGIN_MIN) / this.MARGIN_RANGE) * 100;
+  }
+
+  isPositive(value: number): boolean {
+      return value >= 0;
+  }
+
+  // Methods
+  getSliderBackground(): string {
+      const val = this.waterAllocation();
+      const min = 50;
+      const max = 100;
+      // Calculate percentage of the range (0% at min, 100% at max)
+      const percentage = ((val - min) / (max - min)) * 100;
+
+      return `linear-gradient(to right, var(--primary-green) 0%, var(--primary-green) ${percentage}%, var(--gray-200) ${percentage}%, var(--gray-200) 100%)`;
+  }
+
+  // Methods
+  onAllocationChange(event: Event) {
+      const value = (event.target as HTMLInputElement).value;
+      this.waterAllocation.set(Number(value));
+  }
+
+  // Get bankruptcy-adjusted revenue for tooltip display (only for Wine Grapes)
+  getBankruptcyAdjustedRevenue(cropName: string): number {
+      const crop = this.cropMetrics().find(c => c.name === cropName);
+      if (!crop) return 0;
+
+      if (!this.showBankruptcyImpact()) {
+          return crop.revenuePerML;
+      }
+
+      // Apply bankruptcy impact ONLY to Wine Grapes (CRITICAL)
+      if (crop.riskLevel === 'CRITICAL') {
+          return crop.revenuePerML * 0.65; // 35% reduction for crisis crop
+      } else {
+          return crop.revenuePerML; // No change for other crops
+      }
+  }
+
+  // Get the revenue value to display on the bar (affected by bankruptcy toggle for Wine Grapes only)
+  getDisplayRevenue(crop: any): number {
+      if (this.showBankruptcyImpact() && crop.riskLevel === 'CRITICAL') {
+          return this.getBankruptcyAdjustedRevenue(crop.name);
+      }
+      return crop.revenuePerML;
+  }
+
+  // Get percentage difference vs Wine Grapes
+  getPercentageVsWineGrapes(cropName: string): number {
+      const wineGrapes = this.cropMetrics().find(c => c.name === 'Wine Grapes');
+      const crop = this.cropMetrics().find(c => c.name === cropName);
+      if (!wineGrapes || !crop) return 0;
+
+      const wineGrapesRevenue = this.getDisplayRevenue(wineGrapes);
+      const cropRevenue = crop.revenuePerML;
+
+      if (wineGrapesRevenue === 0) return 0;
+      return ((cropRevenue - wineGrapesRevenue) / wineGrapesRevenue) * 100;
   }
 }

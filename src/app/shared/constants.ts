@@ -76,8 +76,8 @@ export const MOCK_USER = {
 // Mock block data
 export const MOCK_BLOCKS = [
     {
-        id: 'block-a-shiraz',
-        name: 'Block A - Shiraz',
+        id: 'block-1-shiraz',
+        name: 'Block 1 - Shiraz',
         location: 'Renmark, SA',
         coordinates: '34.1747°S, 140.7472°E',
         size: 8,
@@ -90,8 +90,8 @@ export const MOCK_BLOCKS = [
         lan: "BCPKFB"
     },
     {
-        id: 'block-b-cabernet',
-        name: 'Block B - Cabernet',
+        id: 'block-2-cabernet',
+        name: 'Block 2 - Cabernet',
         location: 'Tanunda, SA',
         coordinates: '34.5267°S, 138.9600°E',
         size: 12,
@@ -104,8 +104,8 @@ export const MOCK_BLOCKS = [
         lan: "WOGJLp"
     },
     {
-        id: 'block-c-chardonnay',
-        name: 'Block C - Chardonnay',
+        id: 'block-3-chardonnay',
+        name: 'Block 3 - Chardonnay',
         location: 'Willunga, SA',
         coordinates: '35.2733°S, 138.5500°E',
         size: 6,
@@ -118,8 +118,8 @@ export const MOCK_BLOCKS = [
         lan: "EUVJLU"
     },
     {
-        id: 'block-d-merlot',
-        name: 'Block D - Merlot',
+        id: 'block-4-merlot',
+        name: 'Block 4 - Merlot',
         location: 'Waikerie, SA',
         coordinates: '34.1833°S, 139.9833°E',
         size: 10,

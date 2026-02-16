@@ -78,7 +78,7 @@ export interface ChartSeries {
         <!-- X Axis Labels (Simplified to avoid overlap) -->
          <g *ngIf="showAxes">
              <ng-container *ngFor="let label of labels; let i = index">
-                <text *ngIf="i % labelStep === 0"
+                <text *ngIf="(labels.length - 1 - i) % labelStep === 0"
                     [attr.x]="points[i].x" 
                     [attr.y]="height - 5" 
                     text-anchor="middle" 
@@ -163,6 +163,8 @@ export class LineChartComponent implements OnChanges, AfterViewInit {
   @Input() labels: string[] = [];
   @Input() showAxes: boolean = true;
   @Input() height: number = 200;
+  @Input() minY?: number;
+  @Input() maxY?: number;
 
   // Legacy support for single series
   @Input() data: number[] = [];
@@ -188,7 +190,7 @@ export class LineChartComponent implements OnChanges, AfterViewInit {
   constructor(private el: ElementRef) { }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['series'] || changes['labels'] || changes['data']) {
+    if (changes['series'] || changes['labels'] || changes['data'] || changes['minY'] || changes['maxY']) {
       this.handleLegacyData();
       this.drawChart();
     }
@@ -205,24 +207,50 @@ export class LineChartComponent implements OnChanges, AfterViewInit {
     }
   }
 
+  private resizeObserver: ResizeObserver | null = null;
+
   ngAfterViewInit(): void {
-    setTimeout(() => this.onResize(), 0);
+    this.setupResizeObserver();
   }
 
-  onResize() {
-    const element = this.el.nativeElement.querySelector('.chart-container');
-    if (element) {
-      this.width = element.clientWidth;
-      this.viewBox = `0 0 ${this.width} ${this.height}`;
-      this.labelStep = Math.max(1, Math.floor(this.labels.length / (this.width / 80)));
-      this.drawChart();
+  ngOnDestroy(): void {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
     }
   }
 
+  private setupResizeObserver() {
+    const element = this.el.nativeElement.querySelector('.chart-container');
+    if (!element) return;
+
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        if (entry.contentRect.width > 0) {
+          this.width = entry.contentRect.width;
+          this.height = entry.contentRect.height || this.height;
+          this.viewBox = `0 0 ${this.width} ${this.height}`;
+          this.drawChart();
+        }
+      }
+    });
+
+    this.resizeObserver.observe(element);
+  }
+
+  // Fallback for manual calls if needed
+  onResize() { }
+
   getY(value: number): number {
     const allData = this.series.flatMap(s => s.data);
-    const min = Math.min(...allData) * 0.9;
-    const max = Math.max(...allData) * 1.1;
+    let min = this.minY !== undefined ? this.minY : Math.min(...allData) * 0.9;
+    let max = this.maxY !== undefined ? this.maxY : Math.max(...allData) * 1.1;
+
+    // Fallback if auto-scale is flat
+    if (min === max) {
+      min -= 1;
+      max += 1;
+    }
+
     const range = max - min || 1;
     return this.height - this.padding - ((value - min) / range) * (this.height - 2 * this.padding);
   }
@@ -255,6 +283,11 @@ export class LineChartComponent implements OnChanges, AfterViewInit {
   drawChart() {
     if (!this.series.length || !this.series[0].data.length) return;
 
+    // Calculate label step dynamically based on current width
+    // Use 45px per label estimate for better density on small charts
+    const maxLabels = Math.floor(this.width / 45);
+    this.labelStep = Math.ceil(this.labels.length / maxLabels) || 1;
+
     const dataLen = this.series[0].data.length;
     const stepX = (this.width - 2 * this.padding) / (dataLen - 1);
 
@@ -264,8 +297,13 @@ export class LineChartComponent implements OnChanges, AfterViewInit {
     }));
 
     const allData = this.series.flatMap(s => s.data);
-    const min = Math.min(...allData);
-    const max = Math.max(...allData);
+    let min = this.minY !== undefined ? this.minY : Math.min(...allData);
+    let max = this.maxY !== undefined ? this.maxY : Math.max(...allData);
+
+    // Ensure we respect auto-scale padding logic if inputs are not strict (or maybe loose it for simplicity)
+    if (this.minY === undefined) min *= 0.9;
+    if (this.maxY === undefined) max *= 1.1;
+
     const range = max - min || 1;
 
     // Generate 5 ticks

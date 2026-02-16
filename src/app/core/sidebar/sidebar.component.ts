@@ -275,8 +275,8 @@ export class SidebarComponent {
         this.userProfile = user;
         // Map user user blocks to sidebar blocks with custom naming
         this.blocks = user.blocks.map((block, index) => {
-          // Create alphabet label (A, B, C...)
-          const alphabet = String.fromCharCode(65 + index);
+          // Create numeric label (1, 2, 3...)
+          const blockNumber = index + 1;
 
           // Get real vineyard location based on coordinates
           let vineyardLocation = user.farmLocation;
@@ -307,7 +307,7 @@ export class SidebarComponent {
 
           return {
             id: block.lanslu,
-            name: `BLOCK - ${alphabet} ${block.crop || user.primaryCropName}`,
+            name: `BLOCK ${blockNumber} - ${block.crop || user.primaryCropName}`,
             location: vineyardLocation,
             coordinates: '', // Placeholder
             size: block.area,

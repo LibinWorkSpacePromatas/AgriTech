@@ -19,8 +19,9 @@
     <div class="block-info-card">
         <div class="block-details">
             <h2>
-                <i-lucide [img]="GrapeIcon" size="22" style="margin-right: 8px; vertical-align: bottom;"></i-lucide>
-                {{ currentBlock?.name }} - {{ currentBlock?.crop }}
+                {{ currentBlockPrefix }} -
+                <i-lucide [img]="GrapeIcon" size="22" style="margin-right: 4px; vertical-align: bottom;"></i-lucide>
+                {{ currentBlock?.crop }}
             </h2>
             <div class="meta-row">
                 <span><i-lucide [img]="SproutIcon" size="14"></i-lucide> {{ currentBlock?.area }} ha</span>
@@ -54,28 +55,80 @@
         </div>
 
         <div class="sensors-grid">
-            <div *ngFor="let sensor of sensors" class="sensor-card hover-lift" (click)="openSensorHistory(sensor)">
-                <div class="sensor-header">
-                    <div class="sensor-icon-wrapper">
-                        <i-lucide [img]="sensor.icon" size="18"></i-lucide>
+            <div *ngFor="let sensor of sensors" class="sensor-card-wrapper" (mouseenter)="onSensorHover(sensor)"
+                (mouseleave)="onSensorLeave()" (click)="togglePopup(sensor)">
+
+                <div class="sensor-card hover-lift" [class.active-card]="lockedSensor === sensor">
+                    <div class="sensor-header">
+                        <div class="sensor-icon-wrapper">
+                            <i-lucide [img]="sensor.icon" size="18"></i-lucide>
+                        </div>
+                        <span class="status-dot"
+                            [ngClass]="{'normal': sensor.status === 'Normal', 'warning': sensor.status !== 'Normal'}"></span>
+                        <span class="status-text">{{ sensor.status }}</span>
                     </div>
-                    <span class="status-dot"
-                        [ngClass]="{'normal': sensor.status === 'Normal', 'warning': sensor.status !== 'Normal'}"></span>
-                    <span class="status-text">{{ sensor.status }}</span>
+                    <div class="sensor-label">{{ sensor.label }}</div>
+                    <div class="sensor-value">
+                        {{ sensor.value }}<span class="unit">{{ sensor.unit }}</span>
+                    </div>
                 </div>
-                <div class="sensor-label">{{ sensor.label }}</div>
-                <div class="sensor-value">
-                    {{ sensor.value }}<span class="unit">{{ sensor.unit }}</span>
+
+                <!-- POP-UP CARD -->
+                <div class="sensor-popup-card fade-in-fast" *ngIf="hoveredSensor === sensor || lockedSensor === sensor"
+                    (click)="$event.stopPropagation()">
+                    <div class="popup-header">
+                        <div class="popup-title">
+                            <i-lucide [img]="sensor.icon" size="16"></i-lucide>
+                            <span>{{ sensor.label }} - History</span>
+                        </div>
+                        <div class="header-actions">
+                            <span class="popup-current-value">{{ sensor.value }}{{ sensor.unit }}</span>
+                            <button class="btn-close-popup" (click)="closePopup($event)">
+                                <span class="close-icon">×</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TABS -->
+                    <div class="popup-tabs">
+                        <button class="popup-tab" [class.active]="activeSensorTab === 'hours'"
+                            (click)="setSensorTab('hours')">Hours</button>
+                        <button class="popup-tab" [class.active]="activeSensorTab === 'days'"
+                            (click)="setSensorTab('days')">Days</button>
+                        <button class="popup-tab" [class.active]="activeSensorTab === 'weeks'"
+                            (click)="setSensorTab('weeks')">Weeks</button>
+                    </div>
+
+                    <!-- CHART -->
+                    <div class="popup-chart-container">
+                        <app-line-chart [data]="currentSensorData" [labels]="currentSensorLabels" [height]="180"
+                            color="#10b981" [showAxes]="true"
+                            [minY]="hoveredSensor?.suggestedMin ?? lockedSensor?.suggestedMin"
+                            [maxY]="hoveredSensor?.suggestedMax ?? lockedSensor?.suggestedMax">
+                        </app-line-chart>
+                    </div>
+
+                    <div class="popup-footer">
+                        <span class="trend-indicator">
+                            <i-lucide [img]="CheckCircleIcon" size="12"></i-lucide> Stable
+                        </span>
+                        <span class="average-value">Avg: {{ getAverage(currentSensorData) | number:'1.1-1' }}</span>
+                    </div>
                 </div>
+
             </div>
         </div>
 
         <!-- NUTRIENT SECTION -->
         <div class="nutrient-section">
-            <div class="nutrient-badge-row">
+            <div class="nutrient-badge-row clickable" (click)="openNutrientModal()">
                 <i-lucide [img]="SproutIcon" size="16"></i-lucide>
                 <span class="label">Nutrient Index:</span>
-                <span class="badge badge-high">Low</span>
+                <span class="badge"
+                    [ngClass]="{'badge-high': nutrientData.status === 'High', 'badge-medium': nutrientData.status === 'Medium', 'badge-low': nutrientData.status === 'Low'}">
+                    {{ nutrientData.status }}
+                </span>
+                <i-lucide [img]="ExternalLinkIcon" size="12" class="icon-hint"></i-lucide>
             </div>
         </div>
 
@@ -182,7 +235,7 @@
         <div class="advisor-header-row">
             <div class="advisor-breadcrumbs">
                 <span class="brand">PromaSecure</span> |
-                <span class="block-ref">{{ currentBlock?.name }} - {{ currentBlock?.crop }}</span> |
+                <span class="block-ref">{{ currentBlock?.name }}</span> |
                 <span class="page-title">CROP ADVISOR</span> |
                 <span class="date">{{ advisorData.lastUpdated }}</span>
                 <div class="sub-text">
@@ -234,7 +287,7 @@
             <div class="section-title warning-title">
                 <i-lucide [img]="AlertTriangleIcon" size="20" class="icon-orange"></i-lucide>
                 <i-lucide [img]="ZapIcon" size="20" class="icon-orange"></i-lucide>
-                DO THIS TODAY - {{ currentBlock?.name }} - {{ currentBlock?.crop }}
+                DO THIS TODAY - {{ currentBlock?.name }}
             </div>
 
             <div class="actions-horizontal-grid">
@@ -731,6 +784,48 @@
                 <i-lucide [img]="ExternalLinkIcon" size="16"></i-lucide>
                 View Conversion Grants
             </button>
+        </div>
+    </div>
+</app-modal>
+
+<!-- NUTRIENT INDEX MODAL -->
+<app-modal [isOpen]="isNutrientModalOpen" title="Nutrient Index Analysis" (close)="closeNutrientModal()">
+    <div class="nutrient-modal-content" style="padding: 1rem;">
+        <div class="nutrient-score-header" style="text-align: center; margin-bottom: 2rem;">
+            <div class="nutrient-gauge">
+                <div class="gauge-value" style="font-size: 3rem; font-weight: 800;"
+                    [style.color]="nutrientData.status === 'High' ? '#10b981' : (nutrientData.status === 'Medium' ? '#f59e0b' : '#ef4444')">
+                    {{ nutrientData.score }}%
+                </div>
+                <div class="gauge-label" style="font-weight: 700; color: #374151; text-transform: uppercase;">
+                    INDEX STATUS: {{ nutrientData.status }}
+                </div>
+                <div class="gauge-reason" style="margin-top: 0.5rem; font-size: 1.1rem; color: #4b5563;">
+                    {{ nutrientData.reason }}
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-details">
+            <h4
+                style="margin-bottom: 1.5rem; color: #1e4d3b; border-bottom: 2px solid #ecfdf5; padding-bottom: 0.5rem;">
+                Contributing Factors</h4>
+            <ul class="explanation-list" style="list-style: none; padding: 0;">
+                <li *ngFor="let detail of nutrientData.details"
+                    style="margin-bottom: 1rem; display: flex; gap: 0.75rem; font-size: 0.95rem; color: #4b5563; align-items: center;">
+                    <i-lucide [img]="CheckCircleIcon" size="18" class="icon-green"
+                        *ngIf="detail.includes('Optimal') || detail.includes('optimal') || detail.includes('promotes') || detail.includes('supports')"></i-lucide>
+                    <i-lucide [img]="AlertTriangleIcon" size="18" class="icon-orange"
+                        *ngIf="!(detail.includes('Optimal') || detail.includes('optimal') || detail.includes('promotes') || detail.includes('supports'))"></i-lucide>
+                    <span>{{ detail }}</span>
+                </li>
+            </ul>
+        </div>
+
+        <div
+            style="margin-top: 2rem; padding: 1rem; background-color: #f8fafc; border-radius: 0.5rem; font-size: 0.9rem; color: #64748b;">
+            <p><strong>Note:</strong> This index is an approximation based on soil pH, moisture levels, and temperature.
+                For precise nutrient management (NPK), please install dedicated soil nutrient sensors.</p>
         </div>
     </div>
 </app-modal>

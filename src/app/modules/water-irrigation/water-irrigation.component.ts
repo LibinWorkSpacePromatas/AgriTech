@@ -246,8 +246,8 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
 
     // Map user blocks to Block interface with unique coordinates
     this.blocks = user.blocks.map((block: any, index: number) => {
-      const alphabet = String.fromCharCode(65 + index);
-      
+      const blockNumber = index + 1;
+
       // Get real vineyard location based on coordinates
       let vineyardLocation = user.farmLocation;
       if (block.latitude && block.longitude) {
@@ -277,7 +277,7 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
 
       return {
         id: block.lanslu,
-        name: `BLOCK - ${alphabet} ${block.crop || user.primaryCropName}`,
+        name: `BLOCK ${blockNumber} - ${block.crop || user.primaryCropName}`,
         location: vineyardLocation,
         coordinates: '',
         size: block.area,
@@ -319,11 +319,11 @@ export class WaterIrrigationComponent implements OnInit, OnDestroy, AfterViewIni
   refreshData(updateMapView: boolean = true): void {
     this.isLoading = true;
     this.error = null;
-    
+
     // Get current block to extract crop name
     const currentBlock = this.blocks.find(b => b.lan === this.currentLan);
     const cropName = currentBlock?.crop || 'Shiraz';
-    
+
     this.waterIrrigationService.getIrrigationStatus(this.latitude, this.longitude, this.currentLan, cropName).subscribe({
       next: (status) => {
         console.log('Final Processed Irrigation Status:', status);

@@ -165,6 +165,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     actions: [] as ActionItem[]
   };
 
+  // Nutrient Index Data
+  nutrientData = {
+    status: 'Low' as 'High' | 'Medium' | 'Low',
+    reason: 'Initializing...',
+    score: 0,
+    details: [] as string[]
+  };
+
+  isNutrientModalOpen: boolean = false;
+
   // Alternative crop recommendations
   alternativeCrops: CropRecommendation[] = [];
   yieldImpact: YieldImpact | null = null;
@@ -201,8 +211,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isAlternativeCropModalOpen: boolean = false;
   selectedAlternativeCrop: CropRecommendation | null = null;
 
+  // Sensor Hover & Tab Logic
+  hoveredSensor: Sensor | null = null;
+  lockedSensor: Sensor | null = null; // For click/mobile interaction
+  activeSensorTab: 'hours' | 'days' | 'weeks' = 'hours';
+
   selectedSensor: Sensor | null = null;
   isModalOpen: boolean = false;
+
   chartMode: 'hourly' | 'daily' = 'hourly';
   isLoading: boolean = false;
   nextRefreshSeconds: number = 60;
@@ -210,6 +226,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private weatherInterval!: Subscription;
   private countdownInterval!: Subscription;
   private authSubscription!: Subscription;
+
+  get currentSensorLabels(): string[] {
+    const sensor = this.lockedSensor || this.hoveredSensor;
+    if (!sensor) return [];
+
+    switch (this.activeSensorTab) {
+      case 'hours': return [...(sensor.labelsHours || sensor.historyLabels)];
+      case 'days': return [...sensor.labelsDays];
+      case 'weeks': return [...sensor.labelsWeeks];
+      default: return [...(sensor.labelsHours || sensor.historyLabels)];
+    }
+  }
+
+  get currentBlockPrefix(): string {
+    if (!this.currentBlock?.name) return '';
+    return this.currentBlock.name.split(' - ')[0];
+  }
 
   constructor(
     public weatherService: WeatherService,
@@ -304,12 +337,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       id: appUser.userId,
       name: appUser.userName,
       blocks: appUser.blocks.map((block, index) => {
-        const alphabet = String.fromCharCode(65 + index);
+        const blockNumber = index + 1;
         const cropName = block.crop || appUser.primaryCropName;
 
         return {
           id: block.lanslu,
-          name: `BLOCK - ${alphabet} ${cropName}`,
+          name: `BLOCK ${blockNumber} - ${cropName}`,
           crop: cropName,
           area: block.area,
           soilType: appUser.primarySoilType,
@@ -453,6 +486,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.currentBlock.crop
       );
     }
+
+    // 5. Calculate Nutrient Index
+    this.nutrientData = this.sensorService.calculateNutrientIndex(this.sensors);
   }
 
   evaluateParameter(analysis: any, type: string, value: number) {
@@ -586,6 +622,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   closeRiskModal() {
     this.isRiskModalOpen = false;
+  }
+
+  openNutrientModal() {
+    this.isNutrientModalOpen = true;
+  }
+
+  closeNutrientModal() {
+    this.isNutrientModalOpen = false;
   }
 
   openAlternativeCropModal(crop: CropRecommendation) {
@@ -836,6 +880,59 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isModalOpen = false;
     this.selectedSensor = null;
   }
+
+  // Sensor Pop-up Methods
+  onSensorHover(sensor: Sensor) {
+    if (!this.lockedSensor) {
+      this.hoveredSensor = sensor;
+      if (this.hoveredSensor !== sensor) {
+        this.activeSensorTab = 'hours'; // Reset only if changing sensors
+      }
+    }
+  }
+
+  onSensorLeave() {
+    if (!this.lockedSensor) {
+      this.hoveredSensor = null;
+    }
+  }
+
+  togglePopup(sensor: Sensor) {
+    if (this.lockedSensor === sensor) {
+      this.closePopup();
+    } else {
+      this.lockedSensor = sensor;
+      this.hoveredSensor = sensor;
+      this.activeSensorTab = 'hours';
+    }
+  }
+
+  closePopup(event?: Event) {
+    if (event) event.stopPropagation();
+    this.lockedSensor = null;
+    this.hoveredSensor = null;
+  }
+
+  setSensorTab(tab: 'hours' | 'days' | 'weeks') {
+    this.activeSensorTab = tab;
+  }
+
+  get currentSensorData(): number[] {
+    const sensor = this.lockedSensor || this.hoveredSensor;
+    if (!sensor) return [];
+
+    let data: number[] = [];
+    switch (this.activeSensorTab) {
+      case 'hours': data = sensor.historyHours || sensor.history; break;
+      case 'days': data = sensor.historyDays; break;
+      case 'weeks': data = sensor.historyWeeks; break;
+      default: data = sensor.historyHours || sensor.history;
+    }
+    // Ensure data is copied to avoid mutation issues if chart modifies it (unlikely but safe)
+    return [...data];
+  }
+
+
 
   setActiveTab(tab: 'overview' | 'advisor') {
     this.activeTab = tab;

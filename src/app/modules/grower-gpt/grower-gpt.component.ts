@@ -21,7 +21,7 @@ import DOMPurify from 'dompurify';
 })
 export class GrowerGptComponent implements OnInit, AfterViewChecked {
   @ViewChild('chatContainer') private chatContainer!: ElementRef;
-  
+
   BotIcon = Bot;
   SendIcon = Send;
   SparklesIcon = Sparkles;
@@ -44,11 +44,11 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
     private userDataService: UserDataService,
     private irrigationService: WaterIrrigationService,
     private sanitizer: DomSanitizer
-  ) {}
+  ) { }
 
   renderMarkdown(content: string): SafeHtml {
     const renderer = new marked.Renderer();
-    
+
     // Fix for TS2322: marked v11+ uses a single 'token' argument for renderers
     renderer.table = (token: any) => {
       const header = token.header.map((cell: any) => `<th>${cell.text}</th>`).join('');
@@ -77,7 +77,7 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
       .subscribe({
         next: (status) => {
           this.irrigationData = status;
-          
+
           // Add initial greeting
           this.chatHistory.push({
             role: 'assistant',
@@ -102,7 +102,7 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
     try {
       const element = this.chatContainer.nativeElement.querySelector('.messages-viewport') || this.chatContainer.nativeElement;
       element.scrollTop = element.scrollHeight;
-    } catch (err) {}
+    } catch (err) { }
   }
 
   async retryLastMessage() {
@@ -126,7 +126,7 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
     try {
       const selectedUser = this.userDataService.getUserById('U001');
       const currentBlock = this.blockService.getSelectedBlock();
-      
+
       // STEP 1 — Detect Block Automatically
       // Check if user mentioned a specific block in their message
       let targetBlock = currentBlock;
@@ -135,7 +135,7 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
       if (selectedUser) {
         const mentionedBlock = selectedUser.blocks.find((b, index) => {
           const nameMatch = message.toLowerCase().includes(b.lanslu.toLowerCase());
-          const indexMatch = message.toLowerCase().includes(`block ${String.fromCharCode(65 + index)}`); // Matches "Block A", "Block B", etc.
+          const indexMatch = message.toLowerCase().includes(`block ${index + 1}`); // Matches "Block 1", "Block 2", etc.
           const cropMatch = b.crop ? message.toLowerCase().includes(b.crop.toLowerCase()) : false;
           return nameMatch || indexMatch || cropMatch;
         });
@@ -144,7 +144,7 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
           targetBlock = {
             ...currentBlock,
             id: mentionedBlock.lanslu,
-            name: `Block ${String.fromCharCode(65 + selectedUser.blocks.indexOf(mentionedBlock))}`,
+            name: `Block ${selectedUser.blocks.indexOf(mentionedBlock) + 1}`,
             crop: mentionedBlock.crop || 'Unknown Crop',
             lat: mentionedBlock.latitude,
             lon: mentionedBlock.longitude,
@@ -177,15 +177,15 @@ export class GrowerGptComponent implements OnInit, AfterViewChecked {
     } catch (error: any) {
       console.error('Grower GPT Error:', error);
       let errorMessage = 'I apologize, but I encountered an error connecting to the agronomic engine. Please try again later.';
-      
+
       if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
         errorMessage = 'Authentication Error: The AI service API key appears to be invalid or expired. Please contact support or check your configuration.';
       } else if (error.message?.includes('Rate Limited') || error.message?.includes('429')) {
         errorMessage = 'The AI service is currently busy or handling too many requests. Please wait a moment and click "Retry Connection".';
       }
-      
-      this.chatHistory.push({ 
-        role: 'assistant', 
+
+      this.chatHistory.push({
+        role: 'assistant',
         content: errorMessage
       });
     } finally {

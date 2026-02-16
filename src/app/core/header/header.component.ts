@@ -25,7 +25,7 @@ import { Subscription } from 'rxjs';
         </div>
         
         <div class="header-right">
-          <button class="grower-gpt-btn hover-lift">
+          <button class="grower-gpt-btn hover-lift" routerLink="/grower-gpt">
             <i-lucide [img]="MessageCircleIcon" class="gpt-icon"></i-lucide>
             <span class="btn-text">Open Grower GPT</span>
           </button>

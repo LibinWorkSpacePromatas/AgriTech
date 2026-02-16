@@ -365,6 +365,12 @@
     text-decoration: underline;
 }
 
+.weather-graph-container {
+    height: 160px;
+    width: 100%;
+    overflow: hidden;
+}
+
 /* Footer */
 .prototype-notice {
     border: 1px solid var(--gray-200);

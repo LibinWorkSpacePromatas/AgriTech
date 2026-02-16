@@ -40,28 +40,28 @@ export class WeatherService {
   private readonly CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
   private cache = new Map<string, { data: WeatherData; timestamp: number }>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   isWithinAustralia(lat: number, lon: number): boolean {
     const bounds = environment.irrigation.australiaBounds;
     return (
-      lat >= bounds.minLat &&
-      lat <= bounds.maxLat &&
-      lon >= bounds.minLon &&
-      lon <= bounds.maxLon
+      lat >= bounds.south &&
+      lat <= bounds.north &&
+      lon >= bounds.west &&
+      lon <= bounds.east
     );
   }
 
-  getWeather(lat: number = environment.irrigation.defaultLatitude, 
-             lon: number = environment.irrigation.defaultLongitude): Observable<WeatherData> {
-    
+  getWeather(lat: number = environment.irrigation.defaultLatitude,
+    lon: number = environment.irrigation.defaultLongitude): Observable<WeatherData> {
+
     if (!this.isWithinAustralia(lat, lon)) {
       return throwError(() => new Error('Location must be within Australia.'));
     }
 
     const cacheKey = `${lat},${lon}`;
     const cached = this.getCachedData(cacheKey);
-    
+
     if (cached) {
       return new Observable(observer => {
         observer.next(cached);
@@ -159,13 +159,13 @@ export class WeatherService {
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Weather service error';
-    
+
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Client error: ${error.error.message}`;
     } else {
       errorMessage = `Server error: ${error.status} - ${error.message}`;
     }
-    
+
     console.error('WeatherService Error:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }

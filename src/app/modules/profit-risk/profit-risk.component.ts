@@ -355,7 +355,7 @@ export class ProfitRiskComponent {
             {
                 name: 'Almonds',
                 icon: '🌰',
-                color: '#16A34A',
+                color: '#F59E0B',
                 quadrantX: 18,
                 quadrantY: 22,
                 bubbleSize: 90,

@@ -4,6 +4,7 @@ import { WeatherService, WeatherData, IrrigationRecommendation } from '../weathe
 import { SoilService } from '../soil/soil.service';
 import { SoilData } from '../../model/soil.model';
 import { environment } from '../../../environments/environment';
+import { SensorService } from '../../core/services/sensor.service';
 
 export interface SoilDepthReading {
   depth: number;
@@ -47,7 +48,8 @@ export class WaterIrrigationService {
 
   constructor(
     private weatherService: WeatherService,
-    private soilService: SoilService
+    private soilService: SoilService,
+    private sensorService: SensorService
   ) {}
 
   /**
@@ -136,8 +138,9 @@ export class WaterIrrigationService {
     const moisture60 = (weatherData.soilMoistureDepths?.['9-27cm']?.[0] || 0) * 100;
     const moisture90 = (weatherData.soilMoistureDepths?.['27-81cm']?.[0] || 0) * 100;
 
-    // Current hydration = average of real sensor layers
-    const currentHydration = (moisture30 + moisture60 + moisture90) / 3;
+    // STEP 0: Get Hydration from SensorService (Single Source of Truth)
+    // This ensures Dashboard and Irrigation page show the exact same value.
+    const currentHydration = this.sensorService.getSoilMoisture();
 
     // STEP 1: Calculate ETc (Crop Evapotranspiration)
     // ETc = ET₀ × Kc (crop-specific for mid-season)

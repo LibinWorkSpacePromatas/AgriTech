@@ -41,12 +41,12 @@ We calculate the "Net Deficit" which represents the actual water gap in the soil
     - *Clay Soil*: Factor ~1.2 (Decreases water need).
 - **Volume Conversion**: `Irrigation = Adjusted_mm × 0.01` (Converts mm depth to Megaliters per Hectare).
 
-### 3. Real Soil Moisture (Multi-Depth)
-Uses actual Open-Meteo soil moisture data at three depths:
-- **0-1cm**: Surface moisture
-- **9-27cm**: Root zone moisture  
-- **27-81cm**: Sub-soil moisture
-- **Current Hydration**: Average of all three layers (no artificial simulation)
+### 3. Real Soil Moisture (Single Source of Truth)
+We have unified the data source for hydration to ensure consistency across the entire platform.
+- **SensorService**: The central authority for soil moisture data.
+- **Hydration Source**: `SensorService.getSoilMoisture()` (e.g., 32.5%).
+- **Why**: This ensures that the Dashboard sensor card and the Irrigation page's "Current Hydration" value match perfectly.
+- **Integration**: The irrigation engine uses this sensor value as the baseline for all calculations, rather than estimating hydration from weather models.
 
 ---
 
@@ -94,17 +94,18 @@ Powered by **Leaflet.js**, the map provides more than just a visual; it is an in
 
 ## 🔄 Recent Improvements
 
-1. **Real Soil Moisture**: Replaced artificial hydration simulation with actual Open-Meteo multi-depth data
-2. **Daily Aggregates**: Uses pre-calculated daily ET₀/rainfall instead of manual hourly aggregation
-3. **Authentic Locations**: Updated all block coordinates to real South Australian vineyard locations
-4. **Backend Removal**: Eliminated all localhost:8000 dependencies - system now runs purely on client-side APIs
-5. **UI Layout**: Rearranged cards for better visual flow and space utilization
+1.  **Sensor Integration**: Implemented `SensorService` as the single source of truth for soil moisture, ensuring 100% consistency between Dashboard and Irrigation modules.
+2.  **Daily Aggregates**: Uses pre-calculated daily ET₀/rainfall instead of manual hourly aggregation.
+3.  **Authentic Locations**: Updated all block coordinates to real South Australian vineyard locations.
+4.  **Backend Removal**: Eliminated all localhost:8000 dependencies - system now runs purely on client-side APIs.
+5.  **UI Layout**: Rearranged cards for better visual flow and space utilization.
 
 ---
 
 ## 📂 File Reference
 - [water-irrigation.component.ts](file:///d:/Project-2/AgriTech/src/app/modules/water-irrigation/water-irrigation.component.ts): UI State & Map Events.
 - [water-irrigation.service.ts](file:///d:/Project-2/AgriTech/src/app/services/water-irrigation/water-irrigation.service.ts): Data fetching & Math Engine.
+- [sensor.service.ts](file:///d:/Project-2/AgriTech/src/app/core/services/sensor.service.ts): The Single Source of Truth for soil moisture data.
 - [soil.service.ts](file:///d:/Project-2/AgriTech/src/app/services/soil/soil.service.ts): Soil science & LANSLU parsing.
 - [weather.service.ts](file:///d:/Project-2/AgriTech/src/app/services/weather-service/weather.service.ts): Enhanced weather API with multi-depth soil moisture.
 - [user-data.service.ts](file:///d:/Project-2/AgriTech/src/app/core/services/user-data.service.ts): Real vineyard coordinates for each user block.

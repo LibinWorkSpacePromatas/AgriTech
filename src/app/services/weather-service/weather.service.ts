@@ -45,10 +45,10 @@ export class WeatherService {
   isWithinAustralia(lat: number, lon: number): boolean {
     const bounds = environment.irrigation.australiaBounds;
     return (
-      lat >= bounds.south &&
-      lat <= bounds.north &&
-      lon >= bounds.west &&
-      lon <= bounds.east
+      lat >= bounds.minLat &&
+      lat <= bounds.maxLat &&
+      lon >= bounds.minLon &&
+      lon <= bounds.maxLon
     );
   }
 

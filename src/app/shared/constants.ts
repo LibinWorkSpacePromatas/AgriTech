@@ -60,6 +60,11 @@ export const NAVIGATION_ITEMS = [
         icon: 'sprout'
     },
     {
+        label: 'News',
+        route: '/news',
+        icon: 'newspaper'
+    },
+    {
         label: 'Grower GPT',
         route: '/grower-gpt',
         icon: 'message-circle'

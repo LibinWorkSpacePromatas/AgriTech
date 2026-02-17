@@ -1,0 +1,38 @@
+<div class="news-container">
+    <header class="news-header">
+        <h1>Agricultural News</h1>
+        <p>Latest updates from Australia</p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
+            placeholder="Search news (e.g., wheat, drought, innovation)..." class="search-input">
+        <button (click)="onSearch()" class="search-button">Search</button>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading news...</p>
+    </div>
+
+    <div *ngIf="error" class="error-state">
+        <p>{{ error }}</p>
+    </div>
+
+    <div *ngIf="!loading && !error" class="news-grid">
+        <article *ngFor="let article of newsArticles" class="news-card">
+            <div class="card-image" *ngIf="article.urlToImage">
+                <img [src]="article.urlToImage" [alt]="article.title" loading="lazy">
+            </div>
+            <div class="card-content">
+                <div class="card-meta">
+                    <span class="source">{{ article.source.name }}</span>
+                    <span class="date">{{ article.publishedAt | date:'mediumDate' }}</span>
+                </div>
+                <h2><a [href]="article.url" target="_blank">{{ article.title }}</a></h2>
+                <p class="description">{{ article.description }}</p>
+                <a [href]="article.url" target="_blank" class="read-more">Read full article &rarr;</a>
+            </div>
+        </article>
+    </div>
+</div>

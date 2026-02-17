@@ -33,6 +33,10 @@ export const routes: Routes = [
                 loadComponent: () => import('./modules/growing-opportunities/growing-opportunities.component').then(m => m.GrowingOpportunitiesComponent)
             },
             {
+                path: 'news',
+                loadComponent: () => import('./modules/news/news.component').then(m => m.NewsComponent)
+            },
+            {
                 path: 'grower-gpt',
                 loadComponent: () => import('./modules/grower-gpt/grower-gpt.component').then(m => m.GrowerGptComponent)
             }

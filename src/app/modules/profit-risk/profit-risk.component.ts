@@ -24,25 +24,27 @@ import {
 import { UserDataService } from '../../core/services/user-data.service';
 import { User } from '../../core/models/user.model';
 
-interface Crop {
-    name: string;
-    yieldPerHa: number; // tonnes/ha
-    pricePerTon: number; // $
-    waterMLPerHa: number; // ML/ha
-    variableCosts: number; // $/ha
-    fixedCosts: number; // $/ha
-    volatilityFactor: number; // 0-1
-    color: string;
-    type: 'core' | 'alternative';
-    marginParams?: { // Specific overrides for Net Margin chart to match reference
-        revenueAt100: number;
-        costsAt100: number;
-    };
-    // New fields for Matrix
-    capitalCost?: number;
-    yearsStr?: string;
-    riskLevel?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-    badges?: Array<{ text: string; type: 'crisis' | 'verified' }>;
+export interface Crop {
+  name: string;
+  yieldPerHa: number;
+  pricePerTon: number;
+  waterMLPerHa: number;
+  variableCosts: number;
+  fixedCosts: number;
+  volatilityFactor: number;
+  color: string;
+  type: 'core' | 'alternative';
+  marginParams: { revenueAt100: number; costsAt100: number };
+  capitalCost: number;
+  yearsStr: string;
+  riskLevel: 'CRITICAL' | 'MEDIUM' | 'LOW';
+  badges?: { text: string; type: string }[];
+  revenuePerHa?: number;
+  totalCostsPerHa?: number;
+  netMarginPerHa?: number;
+  revenuePerML?: number;
+  riskAdjustedRevenuePerML?: number;
+  yearsToProfit?: number | string;
 }
 
 @Component({

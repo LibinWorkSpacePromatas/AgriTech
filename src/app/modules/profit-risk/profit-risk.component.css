@@ -947,29 +947,32 @@
 
 .cost-content {
     display: flex;
-    gap: 3rem;
-    /* Increased gap for better separation */
+    gap: 2rem;
+    /* Reduced gap slightly */
     padding: 1rem 0;
-    align-items: flex-start;
-    /* Align top */
+    align-items: center;
+    /* Center vertically */
+    flex-wrap: wrap;
+    /* Allow wrapping for mobile/smaller screens */
 }
 
 /* Left: Donut Chart Section */
 .chart-section {
-    flex: 0 0 auto;
-    width: 300px;
-    /* Constrain width of the chart area */
+    flex: 1;
+    /* Allow it to be flexible */
+    min-width: 250px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
 }
 
 .donut-container {
-    width: 220px;
-    /* Specific fixed size as requested */
-    height: 220px;
-    margin-bottom: 1.5rem;
+    width: 180px;
+    /* Reduced from 220px */
+    height: 180px;
+    /* Reduced from 220px */
+    margin-bottom: 1rem;
     position: relative;
 }
 
@@ -984,17 +987,14 @@
     fill: none;
     stroke-width: 4.5;
     stroke-linecap: butt;
-    /* Clean ends for segments */
 }
 
 .circle-bg {
     stroke: #22c55e;
-    /* Green base */
 }
 
 .circle {
     stroke: #ef4444;
-    /* Red segment */
     animation: progress 1s ease-out forwards;
 }
 
@@ -1007,7 +1007,6 @@
 .percentage-text-costs {
     fill: white;
     font-size: 0.25rem;
-    /* Small text inside segment */
     font-weight: 700;
     text-anchor: middle;
     pointer-events: none;
@@ -1024,8 +1023,11 @@
 /* Legend */
 .chart-legend {
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    /* Allow wrapping */
+    gap: 0.75rem;
+    /* Reduced gap */
+    margin-bottom: 0.5rem;
     justify-content: center;
     width: 100%;
 }
@@ -1033,9 +1035,12 @@
 .legend-item {
     display: flex;
     align-items: center;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    /* Reduced font size */
     font-weight: 500;
     color: var(--gray-600);
+    white-space: nowrap;
+    /* Keep items on one line if possible */
 }
 
 .legend-box {

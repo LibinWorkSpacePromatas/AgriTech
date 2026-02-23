@@ -40,6 +40,7 @@ export interface CropRecommendation {
 export interface YieldImpact {
     currentYieldPercent: number;
     projectedLoss: number; // dollars
+    baseProfit: number;    // full potential profit at 100% yield (dollars)
     factors: { name: string; impact: number; severity: string }[];
 }
 
@@ -282,11 +283,13 @@ export class CropAdvisorService {
         }
 
         const currentYieldPercent = Math.max(0, 100 - totalImpact);
-        const projectedLoss = (profile.profitPerHa * areaHa) * (totalImpact / 100);
+        const baseProfit = profile.profitPerHa * areaHa;
+        const projectedLoss = baseProfit * (totalImpact / 100);
 
         return {
             currentYieldPercent,
             projectedLoss,
+            baseProfit,
             factors
         };
     }

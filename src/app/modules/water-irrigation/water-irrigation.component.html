@@ -37,7 +37,7 @@
                 </option>
               </select>
             </div>
-            
+
             <div class="location-picker">
               <div class="coords-input">
                 <div class="field">
@@ -96,15 +96,18 @@
             <div class="soil-details">
               <div class="soil-detail-item">
                 <span class="label">Primary Soil</span>
-                <span class="value">{{ irrigationStatus.soilData.Primary_Soil_Classification }} ({{ irrigationStatus.soilData.Primary_Soil_Value }}%)</span>
+                <span class="value">{{ irrigationStatus.soilData.Primary_Soil_Classification }} ({{
+                  irrigationStatus.soilData.Primary_Soil_Value }}%)</span>
               </div>
               <div class="soil-detail-item">
                 <span class="label">Secondary Soil</span>
-                <span class="value">{{ irrigationStatus.soilData.Secondary_Soil_Classification }} ({{ irrigationStatus.soilData.Secondary_Soil_Value }}%)</span>
+                <span class="value">{{ irrigationStatus.soilData.Secondary_Soil_Classification }} ({{
+                  irrigationStatus.soilData.Secondary_Soil_Value }}%)</span>
               </div>
               <div class="soil-detail-item">
                 <span class="label">Tertiary Soil</span>
-                <span class="value">{{ irrigationStatus.soilData.Tertiary_Soil_Classification }} ({{ irrigationStatus.soilData.Tertiary_Soil_Value }}%)</span>
+                <span class="value">{{ irrigationStatus.soilData.Tertiary_Soil_Classification }} ({{
+                  irrigationStatus.soilData.Tertiary_Soil_Value }}%)</span>
               </div>
               <div class="soil-detail-item">
                 <span class="label">Weighted Soil Factor</span>
@@ -151,8 +154,10 @@
               </div>
               <div class="formula-legend">
                 <p>• <strong>ETc:</strong> Crop water loss today</p>
-                <p>• <strong>Kc:</strong> Vineyard crop coefficient ({{ irrigationStatus.kcValue | number:'1.2-2' }})</p>
-                <p>• <strong>Soil Factor:</strong> Adjustment for {{ irrigationStatus.soilData?.Primary_Soil_Classification || 'soil' }} drainage</p>
+                <p>• <strong>Kc:</strong> Vineyard crop coefficient ({{ irrigationStatus.kcValue | number:'1.2-2' }})
+                </p>
+                <p>• <strong>Soil Factor:</strong> Adjustment for {{
+                  irrigationStatus.soilData?.Primary_Soil_Classification || 'soil' }} drainage</p>
               </div>
             </div>
           </div>
@@ -188,7 +193,8 @@
               <div class="rain-data">
                 <span class="value">{{ irrigationStatus.rainToday | number:'1.1-1' }}mm</span>
                 <span class="source-tag" *ngIf="irrigationStatus.bomStation">
-                  Source: BoM Station {{ irrigationStatus.bomStation.station_id }} ({{ irrigationStatus.bomStation.distance_km }}km)
+                  Source: BoM Station {{ irrigationStatus.bomStation.station_id }} ({{
+                  irrigationStatus.bomStation.distance_km }}km)
                 </span>
                 <span class="source-tag" *ngIf="!irrigationStatus.bomStation">
                   Source: OpenMeteo (Satellite)
@@ -196,10 +202,10 @@
               </div>
             </div>
             <div class="divider"></div>
-            <div class="weather-item">
+            <!-- <div class="weather-item">
               <span class="label">Confidence</span>
               <span class="value">{{ irrigationStatus.confidence * 100 | number:'1.0-0' }}%</span>
-            </div>
+            </div> -->
           </div>
 
           <!-- BoM Station Info (NEW) -->

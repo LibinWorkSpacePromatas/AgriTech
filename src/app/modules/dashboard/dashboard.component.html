@@ -329,30 +329,101 @@
 
         <!-- Yield Impact Visualization -->
         <div class="yield-impact-card" *ngIf="yieldImpact">
+            <!-- Card Header -->
             <div class="impact-header">
                 <i-lucide [img]="AlertTriangleIcon" size="18" class="icon-orange"></i-lucide>
                 <span>Current Yield Impact Analysis</span>
             </div>
-            <div class="impact-content">
-                <div class="yield-gauge">
-                    <div class="gauge-bar">
-                        <div class="gauge-fill" [style.width.%]="yieldImpact.currentYieldPercent"
-                            [ngClass]="yieldImpact.currentYieldPercent < 60 ? 'critical' : yieldImpact.currentYieldPercent < 80 ? 'warning' : 'good'">
+
+            <!-- Yield Gauge Bar -->
+            <div class="yield-gauge-row">
+                <div class="yield-gauge-track">
+                    <div class="yield-gauge-fill" [style.width.%]="yieldImpact.currentYieldPercent"
+                        [ngClass]="yieldImpact.currentYieldPercent < 60 ? 'critical' : yieldImpact.currentYieldPercent < 80 ? 'warning' : 'good'">
+                    </div>
+                </div>
+                <div class="yield-gauge-meta">
+                    <span class="yield-pct-label"
+                        [ngClass]="yieldImpact.currentYieldPercent < 60 ? 'text-danger' : yieldImpact.currentYieldPercent < 80 ? 'text-warning' : 'text-success'">
+                        {{ yieldImpact.currentYieldPercent.toFixed(0) }}% of full yield
+                    </span>
+                    <span class="yield-pct-sub">Based on live sensor readings</span>
+                </div>
+            </div>
+
+            <!-- Profit / Loss Panels -->
+            <div class="pl-panels">
+
+                <!-- PROFIT PANEL -->
+                <div class="pl-panel profit-panel">
+                    <div class="pl-panel-header">
+                        <i-lucide [img]="CheckCircleIcon" size="14" class="icon-green-sm"></i-lucide>
+                        <span>Expected Profit</span>
+                        <span class="pl-panel-badge badge-profit">AT CURRENT YIELD</span>
+                    </div>
+                    <div class="pl-panel-amount profit-amount">
+                        {{ formatCurrency(yieldImpact.baseProfit - yieldImpact.projectedLoss) }}
+                    </div>
+                    <div class="pl-panel-detail">
+                        <div class="pl-detail-row">
+                            <span class="pl-detail-label">Full potential:</span>
+                            <span class="pl-detail-value">{{ formatCurrency(yieldImpact.baseProfit) }}</span>
+                        </div>
+                        <div class="pl-detail-row">
+                            <span class="pl-detail-label">Yield efficiency:</span>
+                            <span class="pl-detail-value profit-pct">{{ yieldImpact.currentYieldPercent.toFixed(0)
+                                }}%</span>
+                        </div>
+                        <div class="pl-panel-msg">
+                            <i-lucide [img]="CheckCircleIcon" size="11" class="icon-green-sm"></i-lucide>
+                            <span *ngIf="yieldImpact.currentYieldPercent >= 90">Excellent conditions</span>
+                            <span
+                                *ngIf="yieldImpact.currentYieldPercent >= 75 && yieldImpact.currentYieldPercent < 90">Good,
+                                minor issues</span>
+                            <span *ngIf="yieldImpact.currentYieldPercent < 75">Needs attention</span>
                         </div>
                     </div>
-                    <div class="gauge-labels">
-                        <span class="current-yield">{{ yieldImpact.currentYieldPercent.toFixed(0) }}% Yield</span>
-                        <span class="projected-loss">{{ formatCurrency(-yieldImpact.projectedLoss) }}
-                            Loss</span>
+                </div>
+
+                <!-- LOSS PANEL -->
+                <div class="pl-panel loss-panel">
+                    <div class="pl-panel-header">
+                        <i-lucide [img]="AlertTriangleIcon" size="14" class="icon-red-sm"></i-lucide>
+                        <span>Yield Losses</span>
+                        <span class="pl-panel-badge badge-loss">WHY YOU'RE LOSING</span>
+                    </div>
+                    <div class="pl-panel-amount loss-amount">
+                        {{ formatCurrency(-yieldImpact.projectedLoss) }}
+                    </div>
+
+                    <!-- No factors = no loss -->
+                    <div class="pl-no-loss" *ngIf="yieldImpact.factors.length === 0">
+                        <i-lucide [img]="CheckCircleIcon" size="13" class="icon-green-sm"></i-lucide>
+                        <span>No active loss factors — all sensors optimal</span>
+                    </div>
+
+                    <!-- Loss Factors breakdown -->
+                    <div class="loss-factors-list" *ngIf="yieldImpact.factors.length > 0">
+                        <div *ngFor="let factor of yieldImpact.factors" class="loss-factor-row"
+                            [ngClass]="'factor-' + factor.severity">
+                            <div class="loss-factor-left">
+                                <i-lucide [img]="AlertTriangleIcon" size="11" class="factor-icon"></i-lucide>
+                                <span class="loss-factor-name">{{ factor.name }}</span>
+                            </div>
+                            <div class="loss-factor-right">
+                                <span class="loss-factor-pct">-{{ factor.impact.toFixed(0) }}% yield</span>
+                                <span class="loss-factor-dollars">
+                                    -{{ formatCurrency(yieldImpact.baseProfit * factor.impact / 100) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="loss-factors-tip">
+                            <i-lucide [img]="AlertTriangleIcon" size="11" class="icon-orange-sm"></i-lucide>
+                            Fix issues above to recover lost revenue
+                        </div>
                     </div>
                 </div>
-                <div class="impact-factors">
-                    <div *ngFor="let factor of yieldImpact.factors" class="factor-item"
-                        [ngClass]="'severity-' + factor.severity">
-                        <i-lucide [img]="AlertTriangleIcon" size="12"></i-lucide>
-                        <span>{{ factor.name }}: -{{ factor.impact.toFixed(0) }}%</span>
-                    </div>
-                </div>
+
             </div>
         </div>
 
